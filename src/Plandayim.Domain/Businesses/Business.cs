@@ -15,6 +15,13 @@ public class Business : BaseEntity
         long cityId,
         long districtId)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(slug);
+        ArgumentException.ThrowIfNullOrWhiteSpace(phoneNumber);
+
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cityId);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(districtId);
+
         Name = name;
         Slug = slug;
         PhoneNumber = phoneNumber;
@@ -24,6 +31,8 @@ public class Business : BaseEntity
         IsVerified = false;
         CreatedAtUtc = DateTime.UtcNow;
     }
+
+    // Properties
 
     public string Name { get; private set; } = null!;
 
@@ -52,4 +61,60 @@ public class Business : BaseEntity
     public bool IsVerified { get; private set; }
 
     public bool IsActive { get; private set; }
+
+    // Domain Methods
+
+    public void UpdateDetails(string name, string slug, string? description)
+    {
+        Name = name;
+        Slug = slug;
+        Description = description;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void UpdateContact(
+        string phoneNumber,
+        string? whatsAppNumber,
+        string? email,
+        string? websiteUrl)
+    {
+        PhoneNumber = phoneNumber;
+        WhatsAppNumber = whatsAppNumber;
+        Email = email;
+        WebsiteUrl = websiteUrl;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void UpdateLocation(
+        long cityId,
+        long districtId,
+        string? address,
+        decimal? latitude,
+        decimal? longitude)
+    {
+        CityId = cityId;
+        DistrictId = districtId;
+        Address = address;
+        Latitude = latitude;
+        Longitude = longitude;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void Verify()
+    {
+        IsVerified = true;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void Activate()
+    {
+        IsActive = true;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
 }

@@ -1,0 +1,89 @@
+[1mdiff --git a/src/Plandayim.Domain/Businesses/Business.cs b/src/Plandayim.Domain/Businesses/Business.cs[m
+[1mindex 2cdad43..8da0f60 100644[m
+[1m--- a/src/Plandayim.Domain/Businesses/Business.cs[m
+[1m+++ b/src/Plandayim.Domain/Businesses/Business.cs[m
+[36m@@ -15,6 +15,13 @@[m [mpublic class Business : BaseEntity[m
+         long cityId,[m
+         long districtId)[m
+     {[m
+[32m+[m[32m        ArgumentException.ThrowIfNullOrWhiteSpace(name);[m
+[32m+[m[32m        ArgumentException.ThrowIfNullOrWhiteSpace(slug);[m
+[32m+[m[32m        ArgumentException.ThrowIfNullOrWhiteSpace(phoneNumber);[m
+[32m+[m
+[32m+[m[32m        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cityId);[m
+[32m+[m[32m        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(districtId);[m
+[32m+[m
+         Name = name;[m
+         Slug = slug;[m
+         PhoneNumber = phoneNumber;[m
+[36m@@ -25,6 +32,8 @@[m [mpublic class Business : BaseEntity[m
+         CreatedAtUtc = DateTime.UtcNow;[m
+     }[m
+ [m
+[32m+[m[32m    // Properties[m
+[32m+[m
+     public string Name { get; private set; } = null!;[m
+ [m
+     public string Slug { get; private set; } = null!;[m
+[36m@@ -52,4 +61,60 @@[m [mpublic class Business : BaseEntity[m
+     public bool IsVerified { get; private set; }[m
+ [m
+     public bool IsActive { get; private set; }[m
+[32m+[m
+[32m+[m[32m    // Domain Methods[m
+[32m+[m
+[32m+[m[32m    public void UpdateDetails(string name, string slug, string? description)[m
+[32m+[m[32m    {[m
+[32m+[m[32m        Name = name;[m
+[32m+[m[32m        Slug = slug;[m
+[32m+[m[32m        Description = description;[m
+[32m+[m[32m        UpdatedAtUtc = DateTime.UtcNow;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public void UpdateContact([m
+[32m+[m[32m        string phoneNumber,[m
+[32m+[m[32m        string? whatsAppNumber,[m
+[32m+[m[32m        string? email,[m
+[32m+[m[32m        string? websiteUrl)[m
+[32m+[m[32m    {[m
+[32m+[m[32m        PhoneNumber = phoneNumber;[m
+[32m+[m[32m        WhatsAppNumber = whatsAppNumber;[m
+[32m+[m[32m        Email = email;[m
+[32m+[m[32m        WebsiteUrl = websiteUrl;[m
+[32m+[m[32m        UpdatedAtUtc = DateTime.UtcNow;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public void UpdateLocation([m
+[32m+[m[32m        long cityId,[m
+[32m+[m[32m        long districtId,[m
+[32m+[m[32m        string? address,[m
+[32m+[m[32m        decimal? latitude,[m
+[32m+[m[32m        decimal? longitude)[m
+[32m+[m[32m    {[m
+[32m+[m[32m        CityId = cityId;[m
+[32m+[m[32m        DistrictId = districtId;[m
+[32m+[m[32m        Address = address;[m
+[32m+[m[32m        Latitude = latitude;[m
+[32m+[m[32m        Longitude = longitude;[m
+[32m+[m[32m        UpdatedAtUtc = DateTime.UtcNow;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public void Verify()[m
+[32m+[m[32m    {[m
+[32m+[m[32m        IsVerified = true;[m
+[32m+[m[32m        UpdatedAtUtc = DateTime.UtcNow;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public void Deactivate()[m
+[32m+[m[32m    {[m
+[32m+[m[32m        IsActive = false;[m
+[32m+[m[32m        UpdatedAtUtc = DateTime.UtcNow;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public void Activate()[m
+[32m+[m[32m    {[m
+[32m+[m[32m        IsActive = true;[m
+[32m+[m[32m        UpdatedAtUtc = DateTime.UtcNow;[m
+[32m+[m[32m    }[m
+ }[m
+\ No newline at end of file[m
