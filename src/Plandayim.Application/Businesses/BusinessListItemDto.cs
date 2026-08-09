@@ -7,6 +7,12 @@ public sealed record BusinessListItemDto(
     string PhoneNumber,
     string? WhatsAppNumber,
     string? Address,
+    string? LogoUrl,
+    string? CoverImageUrl,
     long CityId,
+    string CityName,
     long DistrictId,
-    bool IsVerified);
+    string DistrictName,
+    bool IsVerified,
+    string? PrimaryCategory,
+    bool HasActiveCampaign);

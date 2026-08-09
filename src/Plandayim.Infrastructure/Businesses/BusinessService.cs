@@ -149,6 +149,8 @@ public sealed class BusinessService : IBusinessService
                     x.DistrictId == request.DistrictId.Value));
         }
 
+        var now = DateTime.UtcNow;
+
         return await query
             .OrderByDescending(x => x.IsVerified)
             .ThenBy(x => x.Name)
@@ -159,9 +161,49 @@ public sealed class BusinessService : IBusinessService
                 x.PhoneNumber,
                 x.WhatsAppNumber,
                 x.Address,
+                x.LogoUrl,
+
+                _dbContext.BusinessImages
+                    .Where(image =>
+                        image.BusinessId == x.Id &&
+                        image.IsCover)
+                    .Select(image => image.Url)
+                    .FirstOrDefault(),
+
                 x.CityId,
+
+                _dbContext.Cities
+                    .Where(city => city.Id == x.CityId)
+                    .Select(city => city.Name)
+                    .First(),
+
                 x.DistrictId,
-                x.IsVerified))
+
+                _dbContext.Districts
+                    .Where(district => district.Id == x.DistrictId)
+                    .Select(district => district.Name)
+                    .First(),
+
+                x.IsVerified,
+
+                (
+                    from businessCategory in _dbContext.BusinessCategories
+                    join category in _dbContext.Categories
+                        on businessCategory.CategoryId equals category.Id
+                    where
+                        businessCategory.BusinessId == x.Id &&
+                        businessCategory.IsPrimary
+                    select category.Name
+                ).FirstOrDefault(),
+
+                _dbContext.BusinessCampaigns.Any(campaign =>
+                    campaign.BusinessId == x.Id &&
+                    campaign.IsActive &&
+                    (!campaign.StartsAtUtc.HasValue ||
+                     campaign.StartsAtUtc <= now) &&
+                    (!campaign.EndsAtUtc.HasValue ||
+                     campaign.EndsAtUtc >= now))
+            ))
             .ToListAsync(cancellationToken);
     }
 }

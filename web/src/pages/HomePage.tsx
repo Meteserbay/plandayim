@@ -1,0 +1,235 @@
+import { Link } from "react-router";
+import { useEffect, useState } from "react";
+import { getCategories } from "../api/categories";
+import { getCities, getDistricts } from "../api/locations";
+import { searchBusinesses } from "../api/businesses";
+
+import type { Category } from "../types/category";
+import type { City, District } from "../types/location";
+import type { BusinessListItem } from "../types/business";
+function HomePage() {
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [cities, setCities] = useState<City[]>([]);
+    const [districts, setDistricts] = useState<District[]>([]);
+    const [businesses, setBusinesses] = useState<BusinessListItem[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [selectedCategoryId, setSelectedCategoryId] = useState("");
+    const [selectedCityId, setSelectedCityId] = useState("");
+    const [selectedDistrictId, setSelectedDistrictId] = useState("");
+
+    useEffect(() => {
+        getCategories()
+            .then(setCategories)
+            .catch(console.error);
+
+        getCities()
+            .then(setCities)
+            .catch(console.error);
+    }, []);
+
+    useEffect(() => {
+        if (!selectedCityId) {
+            setDistricts([]);
+            setSelectedDistrictId("");
+            return;
+        }
+
+        getDistricts(Number(selectedCityId))
+            .then(setDistricts)
+            .catch(console.error);
+
+        setSelectedDistrictId("");
+    }, [selectedCityId]);
+    async function handleSearch() {
+        if (!selectedCategoryId || !selectedDistrictId) {
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+
+            const result = await searchBusinesses(
+                Number(selectedCategoryId),
+                Number(selectedDistrictId)
+            );
+
+            setBusinesses(result);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+    return (
+        <div className="page-shell">
+            <header className="site-header">
+                <div className="header-inner">
+                    <Link to="/" className="brand">
+                        Plandayım
+                    </Link>
+
+                    <a href="#" className="header-link">
+                        Firmalar için
+                    </a>
+                </div>
+            </header>
+
+            <section className="hero">
+                <div className="hero-inner">
+                    <h1 className="hero-title">
+                        Planını kolaylaştır.
+                    </h1>
+
+                    <p className="hero-subtitle">
+                        Organizasyonun için ihtiyacın olan hizmetleri keşfet,
+                        sana uygun firmaları tek yerde bul.
+                    </p>
+                </div>
+            </section>
+
+            <section className="search-panel">
+                <div className="search-card">
+                    <div className="field">
+                        <label htmlFor="category">Ne planlıyorsun?</label>
+
+                        <select
+                            id="category"
+                            value={selectedCategoryId}
+                            onChange={(event) =>
+                                setSelectedCategoryId(event.target.value)
+                            }
+                        >
+                            <option value="">Kategori seç</option>
+
+                            {categories.map((category) => (
+                                <option key={category.id} value={category.id}>
+                                    {category.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="field">
+                        <label htmlFor="city">Şehir</label>
+
+                        <select
+                            id="city"
+                            value={selectedCityId}
+                            onChange={(event) =>
+                                setSelectedCityId(event.target.value)
+                            }
+                        >
+                            <option value="">Şehir seç</option>
+
+                            {cities.map((city) => (
+                                <option key={city.id} value={city.id}>
+                                    {city.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="field">
+                        <label htmlFor="district">İlçe</label>
+
+                        <select
+                            id="district"
+                            value={selectedDistrictId}
+                            onChange={(event) =>
+                                setSelectedDistrictId(event.target.value)
+                            }
+                            disabled={!selectedCityId}
+                        >
+                            <option value="">İlçe seç</option>
+
+                            {districts.map((district) => (
+                                <option key={district.id} value={district.id}>
+                                    {district.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <button
+                        className="search-button"
+                        type="button"
+                        onClick={handleSearch}
+                        disabled={
+                            !selectedCategoryId ||
+                            !selectedDistrictId ||
+                            isLoading
+                        }
+                    >
+                        {isLoading ? "Aranıyor..." : "Firmaları Bul"}
+                    </button>
+                </div>
+            </section>
+
+            <main className="content">
+                <h2 className="section-title">
+                    Firmalar
+                </h2>
+
+                {businesses.length === 0 ? (
+                    <div className="empty-state">
+                        Arama kriterlerini seçerek sana uygun firmaları bulabilirsin.
+                    </div>
+                ) : (
+                    <div className="business-grid">
+                        {businesses.map((business) => (
+                            <article
+                                className="business-card"
+                                key={business.id}
+                            >
+                                {business.coverImageUrl && (
+                                    <img
+                                        className="business-card-image"
+                                        src={business.coverImageUrl}
+                                        alt={business.name}
+                                    />
+                                )}
+
+                                <div className="business-card-body">
+                                    <div className="business-card-header">
+                                        <h3>{business.name}</h3>
+
+                                        {business.isVerified && (
+                                            <span className="verified-mini">
+                                                ✓
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {business.primaryCategory && (
+                                        <p className="business-category">
+                                            {business.primaryCategory}
+                                        </p>
+                                    )}
+
+                                    <p className="business-meta">
+                                        {business.cityName} / {business.districtName}
+                                    </p>
+
+                                    {business.hasActiveCampaign && (
+                                        <div className="campaign-badge">
+                                            Plandayım avantajı var
+                                        </div>
+                                    )}
+
+                                    <Link
+                                        className="details-link"
+                                        to={`/business/${business.slug}`}
+                                    >
+                                        Detayları Gör
+                                    </Link>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                )}
+            </main>
+        </div>
+    );
+}
+
+export default HomePage;
