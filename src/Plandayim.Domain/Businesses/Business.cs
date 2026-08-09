@@ -37,7 +37,7 @@ public class Business : BaseEntity
     public string Name { get; private set; } = null!;
 
     public string Slug { get; private set; } = null!;
-
+    public string? LogoUrl { get; private set; }
     public string? Description { get; private set; }
 
     public string PhoneNumber { get; private set; } = null!;
@@ -92,7 +92,11 @@ public class Business : BaseEntity
         WebsiteUrl = websiteUrl;
         UpdatedAtUtc = DateTime.UtcNow;
     }
-
+    public void UpdateLogo(string? logoUrl)
+    {
+        LogoUrl = logoUrl;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
     public void UpdateLocation(
     long cityId,
     long districtId,

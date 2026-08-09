@@ -28,6 +28,7 @@ public sealed class BusinessService : IBusinessService
         b.Id,
         b.Name,
         b.Slug,
+        b.LogoUrl,
         b.Description,
         b.PhoneNumber,
         b.WhatsAppNumber,
@@ -84,6 +85,17 @@ public sealed class BusinessService : IBusinessService
                 x.StartsAtUtc,
                 x.EndsAtUtc))
             .ToListAsync(cancellationToken);
+        var images = await _dbContext.BusinessImages
+    .AsNoTracking()
+    .Where(x => x.BusinessId == business.Id)
+    .OrderByDescending(x => x.IsCover)
+    .ThenBy(x => x.SortOrder)
+    .Select(x => new BusinessImageDto(
+        x.Url,
+        x.AltText,
+        x.SortOrder,
+        x.IsCover))
+    .ToListAsync(cancellationToken);
 
         return new BusinessDetailDto(
     business.Id,
@@ -95,6 +107,7 @@ public sealed class BusinessService : IBusinessService
     business.Email,
     business.WebsiteUrl,
     business.Address,
+    business.LogoUrl,
     business.CityId,
     business.CityName,
     business.DistrictId,
@@ -104,7 +117,8 @@ public sealed class BusinessService : IBusinessService
     business.IsVerified,
     categories,
     serviceAreas,
-    campaigns);
+    campaigns,
+    images);
     }
     public async Task<IReadOnlyList<BusinessListItemDto>> SearchAsync(
         BusinessSearchRequest request,

@@ -15,7 +15,8 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business>
         builder.Property(x => x.Name)
             .IsRequired()
             .HasMaxLength(200);
-
+        builder.Property(x => x.LogoUrl)
+    .HasMaxLength(1000);
         builder.Property(x => x.Slug)
             .IsRequired()
             .HasMaxLength(220);

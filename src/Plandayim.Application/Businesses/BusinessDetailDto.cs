@@ -10,6 +10,7 @@ public sealed record BusinessDetailDto(
     string? Email,
     string? WebsiteUrl,
     string? Address,
+    string? LogoUrl,
     long CityId,
     string CityName,
     long DistrictId,
@@ -19,4 +20,5 @@ public sealed record BusinessDetailDto(
     bool IsVerified,
     IReadOnlyList<string> Categories,
     IReadOnlyList<string> ServiceAreas,
-    IReadOnlyList<BusinessCampaignDto> Campaigns);
+    IReadOnlyList<BusinessCampaignDto> Campaigns,
+    IReadOnlyList<BusinessImageDto> Images);
