@@ -64,8 +64,14 @@ public class Business : BaseEntity
 
     // Domain Methods
 
-    public void UpdateDetails(string name, string slug, string? description)
+    public void UpdateDetails(
+    string name,
+    string slug,
+    string? description)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(slug);
+
         Name = name;
         Slug = slug;
         Description = description;
@@ -73,11 +79,13 @@ public class Business : BaseEntity
     }
 
     public void UpdateContact(
-        string phoneNumber,
-        string? whatsAppNumber,
-        string? email,
-        string? websiteUrl)
+    string phoneNumber,
+    string? whatsAppNumber,
+    string? email,
+    string? websiteUrl)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(phoneNumber);
+
         PhoneNumber = phoneNumber;
         WhatsAppNumber = whatsAppNumber;
         Email = email;
@@ -86,12 +94,15 @@ public class Business : BaseEntity
     }
 
     public void UpdateLocation(
-        long cityId,
-        long districtId,
-        string? address,
-        decimal? latitude,
-        decimal? longitude)
+    long cityId,
+    long districtId,
+    string? address,
+    decimal? latitude,
+    decimal? longitude)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cityId);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(districtId);
+
         CityId = cityId;
         DistrictId = districtId;
         Address = address;

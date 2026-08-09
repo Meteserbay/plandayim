@@ -1,19 +1,22 @@
-using Plandayim.Domain.Common;
-
 namespace Plandayim.Domain.Businesses;
 
-public class BusinessCategory : BaseEntity
+public class BusinessCategory
 {
     private BusinessCategory()
     {
     }
 
-    public BusinessCategory(long businessId, long categoryId, bool isPrimary = false)
+    public BusinessCategory(
+        long businessId,
+        long categoryId,
+        bool isPrimary = false)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(businessId);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(categoryId);
+
         BusinessId = businessId;
         CategoryId = categoryId;
         IsPrimary = isPrimary;
-        CreatedAtUtc = DateTime.UtcNow;
     }
 
     public long BusinessId { get; private set; }
@@ -21,4 +24,14 @@ public class BusinessCategory : BaseEntity
     public long CategoryId { get; private set; }
 
     public bool IsPrimary { get; private set; }
+
+    public void SetAsPrimary()
+    {
+        IsPrimary = true;
+    }
+
+    public void RemoveAsPrimary()
+    {
+        IsPrimary = false;
+    }
 }
