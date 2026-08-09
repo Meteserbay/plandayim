@@ -1,11 +1,42 @@
-var builder = WebApplication.CreateBuilder(args);
+using Microsoft.EntityFrameworkCore;
+using Plandayim.Infrastructure.Persistence;
+using Plandayim.Infrastructure.Persistence.Seed;
+using Plandayim.Application.Categories;
+using Plandayim.Infrastructure.Categories;
+using Plandayim.Application.Locations;
+using Plandayim.Infrastructure.Locations;
+using Plandayim.Application.Businesses;
+using Plandayim.Infrastructure.Businesses;
 
+var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("DefaultConnection connection string was not found.");
+
+builder.Services.AddDbContext<PlandayimDbContext>(options =>
+{
+    options.UseSqlServer(connectionString);
+
+    options.UseSeeding((context, _) =>
+    {
+        DatabaseSeeder.Seed(context);
+    });
+
+    options.UseAsyncSeeding(async (context, _, cancellationToken) =>
+    {
+        await DatabaseSeeder.SeedAsync(context, cancellationToken);
+    });
+});
+
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ILocationService, LocationService>();
+builder.Services.AddScoped<IBusinessService, BusinessService>();
+builder.Services.AddControllers();
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
-
+app.MapControllers();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
