@@ -24,4 +24,22 @@ public sealed class BusinessesController : ControllerBase
 
         return Ok(businesses);
     }
+
+    [HttpGet("{slug}")]
+    public async Task<ActionResult<BusinessDetailDto>> GetBySlug(
+        string slug,
+        CancellationToken cancellationToken)
+    {
+        var business =
+            await _businessService.GetBySlugAsync(
+                slug,
+                cancellationToken);
+
+        if (business is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(business);
+    }
 }
