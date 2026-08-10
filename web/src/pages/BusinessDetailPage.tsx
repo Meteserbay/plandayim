@@ -10,7 +10,7 @@ import type { BusinessDetail } from "../types/business";
 
 function BusinessDetailPage() {
     const { slug } = useParams();
-
+    const [copiedCampaignCode, setCopiedCampaignCode] = useState<string | null>(null);
     const [business, setBusiness] = useState<BusinessDetail | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
@@ -23,7 +23,15 @@ function BusinessDetailPage() {
         }
 
         getBusinessBySlug(slug)
-            .then(setBusiness)
+            .then(async (data) => {
+                setBusiness(data);
+
+                try {
+                    await recordBusinessInteraction(data.id, 4);
+                } catch (error) {
+                    console.error("Profil görüntülenmesi kaydedilemedi:", error);
+                }
+            })
             .catch(() => {
                 setError("İşletme bilgileri alınamadı.");
             })
@@ -58,6 +66,22 @@ function BusinessDetailPage() {
 
         recordBusinessInteraction(business.id, type)
             .catch(console.error);
+    }
+
+    async function copyCampaignCode(code: string) {
+        try {
+            await navigator.clipboard.writeText(code);
+
+            setCopiedCampaignCode(code);
+
+            await recordBusinessInteraction(business.id, 5);
+
+            setTimeout(() => {
+                setCopiedCampaignCode(null);
+            }, 2000);
+        } catch (error) {
+            console.error("Kampanya kodu kopyalanamadı:", error);
+        }
     }
     return (
         <div className="detail-page">
@@ -200,9 +224,21 @@ function BusinessDetailPage() {
 
                                 <p>{campaign.description}</p>
 
-                                <span className="campaign-code">
-                                    {campaign.code}
-                                </span>
+                                <div className="campaign-code-row">
+                                    <span className="campaign-code">
+                                        {campaign.code}
+                                    </span>
+
+                                    <button
+                                        type="button"
+                                        className="campaign-copy-button"
+                                        onClick={() => copyCampaignCode(campaign.code)}
+                                    >
+                                        {copiedCampaignCode === campaign.code
+                                            ? "Kopyalandı ✓"
+                                            : "Kopyala"}
+                                    </button>
+                                </div>
 
                                 <p>
                                     Firmayla iletişime geçerken bu kodu
