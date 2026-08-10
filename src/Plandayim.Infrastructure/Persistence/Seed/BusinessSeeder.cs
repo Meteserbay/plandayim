@@ -39,11 +39,17 @@ public static class BusinessSeeder
             .First(x => x.Slug == "dugun-organizasyonu");
 
         var lokmaci = new Business(
-            "Örnek Lokma",
-            "ornek-lokma",
+    "Örnek Lokma",
+    "ornek-lokma",
+    "05550000001",
+    istanbul.Id,
+    pendik.Id);
+
+        lokmaci.UpdateContact(
             "05550000001",
-            istanbul.Id,
-            pendik.Id);
+            "905550000001",
+            "ornek@plandayim.com",
+            "https://example.com");
 
         var photographer = new Business(
             "Örnek Fotoðraf",

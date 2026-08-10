@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Plandayim.Application.Businesses;
+using Plandayim.Domain.Businesses;
 using Plandayim.Infrastructure.Persistence;
 
 namespace Plandayim.Infrastructure.Businesses;
@@ -11,6 +12,31 @@ public sealed class BusinessService : IBusinessService
     public BusinessService(PlandayimDbContext dbContext)
     {
         _dbContext = dbContext;
+    }
+
+    public async Task RecordInteractionAsync(
+    long businessId,
+    BusinessInteractionType type,
+    CancellationToken cancellationToken = default)
+    {
+        var businessExists = await _dbContext.Businesses
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.Id == businessId && x.IsActive,
+                cancellationToken);
+
+        if (!businessExists)
+        {
+            throw new KeyNotFoundException("Business not found.");
+        }
+
+        var interaction = new BusinessInteraction(
+            businessId,
+            type);
+
+        _dbContext.BusinessInteractions.Add(interaction);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
     public async Task<BusinessDetailDto?> GetBySlugAsync(
     string slug,

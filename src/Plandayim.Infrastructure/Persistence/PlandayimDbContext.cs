@@ -15,7 +15,8 @@ public class PlandayimDbContext : DbContext
     public DbSet<Business> Businesses => Set<Business>();
     public DbSet<BusinessImage> BusinessImages => Set<BusinessImage>();
     public DbSet<BusinessCategory> BusinessCategories => Set<BusinessCategory>();
-
+    public DbSet<BusinessInteraction> BusinessInteractions
+    => Set<BusinessInteraction>();
     public DbSet<BusinessServiceArea> BusinessServiceAreas => Set<BusinessServiceArea>();
 
     public DbSet<BusinessCampaign> BusinessCampaigns => Set<BusinessCampaign>();

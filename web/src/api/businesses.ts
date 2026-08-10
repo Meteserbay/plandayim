@@ -5,6 +5,26 @@ import type {
 
 const API_BASE_URL = "http://localhost:5171";
 
+export async function recordBusinessInteraction(
+    businessId: number,
+    type: number
+): Promise<void> {
+    const response = await fetch(
+        `${API_BASE_URL}/api/businesses/${businessId}/interactions`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ type }),
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error("Etkileþim kaydedilemedi.");
+    }
+}
+
 export async function searchBusinesses(
     categoryId: number,
     districtId: number

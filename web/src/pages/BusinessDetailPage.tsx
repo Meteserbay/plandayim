@@ -2,7 +2,10 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
-import { getBusinessBySlug } from "../api/businesses";
+import {
+    getBusinessBySlug,
+    recordBusinessInteraction
+} from "../api/businesses";
 import type { BusinessDetail } from "../types/business";
 
 function BusinessDetailPage() {
@@ -48,7 +51,14 @@ function BusinessDetailPage() {
             </main>
         );
     }
+    function trackInteraction(type: number) {
+        if (!business) {
+            return;
+        }
 
+        recordBusinessInteraction(business.id, type)
+            .catch(console.error);
+    }
     return (
         <div className="detail-page">
             <Header />
@@ -97,6 +107,7 @@ function BusinessDetailPage() {
                                 <a
                                     className="primary-action"
                                     href={`tel:${business.phoneNumber}`}
+                                    onClick={() => trackInteraction(1)}
                                 >
                                     Firmayı Ara
                                 </a>
@@ -104,11 +115,24 @@ function BusinessDetailPage() {
                                 {business.whatsAppNumber && (
                                     <a
                                         className="secondary-action"
-                                        href={`https://wa.me/${business.whatsAppNumber}`}
+                                        href={`https://wa.me/${business.whatsAppNumber.replace(/\D/g, "")}`}
                                         target="_blank"
                                         rel="noreferrer"
+                                        onClick={() => trackInteraction(2)}
                                     >
-                                        WhatsApp
+                                        WhatsApp'tan Yaz
+                                    </a>
+                                )}
+
+                                {business.websiteUrl && (
+                                    <a
+                                        className="secondary-action"
+                                        href={business.websiteUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        onClick={() => trackInteraction(3)}
+                                    >
+                                        Web Sitesine Git
                                     </a>
                                 )}
                             </div>
@@ -193,8 +217,34 @@ function BusinessDetailPage() {
                             <p>
                                 <strong>Telefon</strong>
                                 <br />
-                                {business.phoneNumber}
+                                <a href={`tel:${business.phoneNumber}`}>
+                                    {business.phoneNumber}
+                                </a>
                             </p>
+
+                            {business.email && (
+                                <p>
+                                    <strong>E-posta</strong>
+                                    <br />
+                                    <a href={`mailto:${business.email}`}>
+                                        {business.email}
+                                    </a>
+                                </p>
+                            )}
+
+                            {business.websiteUrl && (
+                                <p>
+                                    <strong>Web Sitesi</strong>
+                                    <br />
+                                    <a
+                                        href={business.websiteUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        Siteyi ziyaret et
+                                    </a>
+                                </p>
+                            )}
 
                             {business.address && (
                                 <p>

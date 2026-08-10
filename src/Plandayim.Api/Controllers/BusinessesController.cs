@@ -14,6 +14,21 @@ public sealed class BusinessesController : ControllerBase
         _businessService = businessService;
     }
 
+
+    [HttpPost("{businessId:long}/interactions")]
+    public async Task<IActionResult> RecordInteraction(
+    long businessId,
+    [FromBody] CreateBusinessInteractionRequest request,
+    CancellationToken cancellationToken)
+    {
+        await _businessService.RecordInteractionAsync(
+            businessId,
+            request.Type,
+            cancellationToken);
+
+        return NoContent();
+    }
+
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<BusinessListItemDto>>> Search(
         [FromQuery] BusinessSearchRequest request,
