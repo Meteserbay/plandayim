@@ -1,7 +1,7 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Link } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getCategories } from "../api/categories";
 import { getCities, getDistricts } from "../api/locations";
 import { searchBusinesses } from "../api/businesses";
@@ -18,6 +18,8 @@ function HomePage() {
     const [selectedCategoryId, setSelectedCategoryId] = useState("");
     const [selectedCityId, setSelectedCityId] = useState("");
     const [selectedDistrictId, setSelectedDistrictId] = useState("");
+    const resultsRef = useRef<HTMLElement | null>(null);
+    const [hasSearched, setHasSearched] = useState(false);
 
     useEffect(() => {
         getCategories()
@@ -56,6 +58,13 @@ function HomePage() {
             );
 
             setBusinesses(result);
+            setHasSearched(true);
+            setTimeout(() => {
+                resultsRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+            }, 100);
         } catch (error) {
             console.error(error);
         } finally {
@@ -156,8 +165,10 @@ function HomePage() {
                     </button>
                 </div>
             </section>
+            
 
-            <main className="content">
+            {hasSearched && (
+            <main className="content" ref={resultsRef}>
                 <h2 className="section-title">
                     Firmalar
                 </h2>
@@ -220,6 +231,54 @@ function HomePage() {
                     </div>
                 )}
             </main>
+            )}
+            <section className="popular-section">
+                <div className="popular-container">
+                    <div className="popular-heading">
+                        <div>
+                            <span className="section-eyebrow">
+                                KEŞFET
+                            </span>
+
+                            <h2>Popüler hizmetler</h2>
+
+                            <p>
+                                Organizasyonun için en çok ihtiyaç duyulan
+                                hizmetleri keşfet.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="category-grid">
+                        {categories.slice(0, 8).map((category) => (
+                            <button
+                                key={category.id}
+                                type="button"
+                                className={
+                                    selectedCategoryId === String(category.id)
+                                        ? "category-card category-card-active"
+                                        : "category-card"
+                                }
+                                onClick={() =>
+                                    setSelectedCategoryId(String(category.id))
+                                }
+                            >
+                                <span className="category-icon">
+                                    {category.name.charAt(0)}
+                                </span>
+
+                                <span className="category-name">
+                                    {category.name}
+                                </span>
+
+                                <span className="category-arrow">
+                                    →
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </section>
             <section id="how-it-works" className="info-section">
                 <div className="info-container">
                     <div className="section-heading">
