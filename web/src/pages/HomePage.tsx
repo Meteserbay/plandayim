@@ -1,3 +1,5 @@
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { Link } from "react-router";
 import { useEffect, useState } from "react";
 import { getCategories } from "../api/categories";
@@ -62,17 +64,7 @@ function HomePage() {
     }
     return (
         <div className="page-shell">
-            <header className="site-header">
-                <div className="header-inner">
-                    <Link to="/" className="brand">
-                        Plandayım
-                    </Link>
-
-                    <a href="#" className="header-link">
-                        Firmalar için
-                    </a>
-                </div>
-            </header>
+            <Header />
 
             <section className="hero">
                 <div className="hero-inner">
@@ -228,6 +220,80 @@ function HomePage() {
                     </div>
                 )}
             </main>
+            <section id="how-it-works" className="info-section">
+                <div className="info-container">
+                    <div className="section-heading">
+                        <span>Nasıl çalışır?</span>
+
+                        <h2>
+                            İhtiyacın olan hizmete birkaç adımda ulaş.
+                        </h2>
+
+                        <p>
+                            Kategori ve bölge seç, sana hizmet veren işletmeleri
+                            keşfet ve doğrudan iletişime geç.
+                        </p>
+                    </div>
+
+                    <div className="steps-grid">
+                        <article className="step-card">
+                            <span className="step-number">1</span>
+                            <h3>Hizmetini seç</h3>
+                            <p>
+                                İhtiyacın olan organizasyon hizmetini belirle.
+                            </p>
+                        </article>
+
+                        <article className="step-card">
+                            <span className="step-number">2</span>
+                            <h3>Bölgeni belirle</h3>
+                            <p>
+                                Şehir ve ilçeni seçerek sana hizmet veren
+                                işletmeleri görüntüle.
+                            </p>
+                        </article>
+
+                        <article className="step-card">
+                            <span className="step-number">3</span>
+                            <h3>Firmayla iletişime geç</h3>
+                            <p>
+                                Firma profilini incele ve doğrudan işletmeyle
+                                iletişime geç.
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section id="businesses" className="business-cta-section">
+                <div className="business-cta">
+                    <div className="business-cta-content">
+                        <span className="cta-eyebrow">
+                            Firmalar için
+                        </span>
+
+                        <h2>
+                            Yeni müşterilerin seni Plandayım'da bulsun.
+                        </h2>
+
+                        <p>
+                            İşletmeni Plandayım'a ekleyerek hizmet arayan
+                            müşterilerin seni keşfetmesini sağla.
+                        </p>
+                    </div>
+
+                    <div className="business-cta-action">
+                        <a
+                            className="cta-button"
+                            href="mailto:iletisim@plandayim.com"
+                        >
+                            İşletmemi Eklemek İstiyorum
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <Footer />
         </div>
     );
 }

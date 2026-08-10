@@ -1,3 +1,5 @@
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { getBusinessBySlug } from "../api/businesses";
@@ -49,6 +51,7 @@ function BusinessDetailPage() {
 
     return (
         <div className="detail-page">
+            <Header />
             <div className="detail-container">
                 <Link to="/" className="back-link">
                     ← Ana sayfaya dön
@@ -204,6 +207,7 @@ function BusinessDetailPage() {
                     </aside>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 }
