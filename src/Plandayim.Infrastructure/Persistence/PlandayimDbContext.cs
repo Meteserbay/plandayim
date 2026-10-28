@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Plandayim.Domain.BusinessApplications;
 using Plandayim.Domain.Businesses;
 using Plandayim.Domain.Categories;
 using Plandayim.Domain.Locations;
@@ -17,6 +18,8 @@ public class PlandayimDbContext : DbContext
     public DbSet<BusinessCategory> BusinessCategories => Set<BusinessCategory>();
     public DbSet<BusinessInteraction> BusinessInteractions
     => Set<BusinessInteraction>();
+    public DbSet<BusinessApplication> BusinessApplications
+    => Set<BusinessApplication>();
     public DbSet<BusinessServiceArea> BusinessServiceAreas => Set<BusinessServiceArea>();
 
     public DbSet<BusinessCampaign> BusinessCampaigns => Set<BusinessCampaign>();

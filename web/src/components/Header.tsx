@@ -17,9 +17,9 @@ function Header() {
                         Nasıl Çalışır?
                     </a>
 
-                    <a href="/#businesses" className="header-business-link">
+                    <Link to="/firmalar-icin" className="header-business-link">
                         Firmalar İçin
-                    </a>
+                    </Link>
                 </nav>
             </div>
         </header>

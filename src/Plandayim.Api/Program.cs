@@ -7,6 +7,9 @@ using Plandayim.Application.Locations;
 using Plandayim.Infrastructure.Locations;
 using Plandayim.Application.Businesses;
 using Plandayim.Infrastructure.Businesses;
+using Plandayim.Application.BusinessApplications;
+using Plandayim.Infrastructure.BusinessApplications;
+using Plandayim.Api.ErrorHandling;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -26,11 +29,15 @@ builder.Services.AddDbContext<PlandayimDbContext>(options =>
         await DatabaseSeeder.SeedAsync(context, cancellationToken);
     });
 });
-
+builder.Services.AddScoped<
+    IBusinessApplicationService,
+    BusinessApplicationService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IBusinessService, BusinessService>();
 builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
@@ -46,6 +53,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+app.UseExceptionHandler();
 app.UseCors("Frontend");
 app.MapControllers();
 // Configure the HTTP request pipeline.

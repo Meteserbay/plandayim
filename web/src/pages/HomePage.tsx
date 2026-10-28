@@ -342,12 +342,12 @@ function HomePage() {
                     </div>
 
                     <div className="business-cta-action">
-                        <a
+                        <Link
                             className="cta-button"
-                            href="mailto:iletisim@plandayim.com"
+                            to="/firmalar-icin"
                         >
                             İşletmemi Eklemek İstiyorum
-                        </a>
+                        </Link>
                     </div>
                 </div>
             </section>
