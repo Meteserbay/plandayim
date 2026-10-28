@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Plandayim.Application.Common;
 
 namespace Plandayim.Api.ErrorHandling;
 
@@ -23,12 +24,14 @@ public sealed class ApiExceptionHandler : IExceptionHandler
     {
         var (statusCode, title) = exception switch
         {
+            RequestValidationException =>
+                (StatusCodes.Status400BadRequest, exception.Message),
             KeyNotFoundException =>
                 (StatusCodes.Status404NotFound, "Kayıt bulunamadı."),
             ArgumentException =>
                 (StatusCodes.Status400BadRequest, "Gönderilen bilgiler geçersiz."),
-            InvalidOperationException =>
-                (StatusCodes.Status409Conflict, "İşlem şu an yapılamıyor."),
+            // InvalidOperationException bilerek eşlenmez: EF Core sorgu
+            // hataları da bu tipte olduğu için 500 olarak loglanmalı.
             _ =>
                 (StatusCodes.Status500InternalServerError, "Beklenmeyen bir hata oluştu.")
         };
