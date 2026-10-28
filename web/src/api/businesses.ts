@@ -13,6 +13,9 @@ export async function recordBusinessInteraction(
         `${API_BASE_URL}/api/businesses/${businessId}/interactions`,
         {
             method: "POST",
+            // Firma sahibi kendi profilini gezerken istatistiğe sayılmaması
+            // için oturum çerezi gönderilir.
+            credentials: "include",
             headers: {
                 "Content-Type": "application/json",
             },

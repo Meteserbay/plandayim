@@ -36,6 +36,8 @@ export interface BusinessApplication {
     phoneNumber: string;
     email: string;
     message?: string | null;
+    applicantUserId?: number | null;
+    applicantEmail?: string | null;
     createdAtUtc: string;
     updatedAtUtc?: string | null;
 }

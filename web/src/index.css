@@ -433,7 +433,315 @@ button {
     font-size: 14px;
 }
 
+/* Hesap */
+
+.auth-switch {
+    margin: 0;
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+}
+
+    .auth-switch a {
+        color: #4338ca;
+        font-weight: 700;
+    }
+
+.auth-actions {
+    justify-content: center;
+}
+
+/* Firma sahibi paneli */
+
+.owner-container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+}
+
+.owner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+    .owner-header .section-title {
+        margin: 0;
+    }
+
+.owner-business-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+    .owner-business-bar h2 {
+        margin: 0;
+        font-size: 22px;
+    }
+
+    .owner-business-bar .field {
+        min-width: 260px;
+    }
+
+.owner-tabs {
+    margin-bottom: 8px;
+}
+
+.owner-section {
+    margin-top: 24px;
+}
+
+    .owner-section > h2 {
+        font-size: 20px;
+    }
+
+.owner-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+    .owner-section-header h2 {
+        margin: 0;
+        font-size: 20px;
+    }
+
+    .owner-section-header .admin-tabs {
+        margin: 0;
+    }
+
+.owner-card-title {
+    margin: 0 0 12px;
+    font-size: 16px;
+}
+
+.owner-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: opacity 0.15s;
+}
+
+    .owner-stats.is-refreshing {
+        opacity: 0.5;
+    }
+
+.owner-application {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+}
+
+    .owner-application p {
+        margin: 2px 0 0;
+    }
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.stat-tile {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stat-label {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #111827;
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-change {
+    color: #64748b;
+    font-size: 12px;
+}
+
+/* Grafik: doğrulanmış kategorik palet (dataviz) */
+
+.daily-chart {
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --chart-grid: #e5e7eb;
+    --chart-text: #64748b;
+}
+
+.chart-legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 8px;
+    color: #334155;
+    font-size: 13px;
+}
+
+.chart-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.chart-legend-swatch {
+    width: 12px;
+    height: 3px;
+    border-radius: 2px;
+}
+
+    .chart-legend-swatch.chart-series-1 {
+        background: var(--series-1);
+    }
+
+    .chart-legend-swatch.chart-series-2 {
+        background: var(--series-2);
+    }
+
+.chart-canvas {
+    position: relative;
+    width: 100%;
+}
+
+    .chart-canvas svg {
+        display: block;
+    }
+
+.chart-grid {
+    stroke: var(--chart-grid);
+    stroke-width: 1;
+}
+
+.chart-axis-label {
+    fill: var(--chart-text);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-line {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+    .chart-line.chart-series-1 {
+        stroke: var(--series-1);
+    }
+
+    .chart-line.chart-series-2 {
+        stroke: var(--series-2);
+    }
+
+.chart-dot {
+    stroke: white;
+    stroke-width: 2;
+}
+
+    .chart-dot.chart-series-1 {
+        fill: var(--series-1);
+    }
+
+    .chart-dot.chart-series-2 {
+        fill: var(--series-2);
+    }
+
+.chart-crosshair {
+    stroke: #94a3b8;
+    stroke-width: 1;
+}
+
+.chart-hit-area {
+    fill: transparent;
+    cursor: crosshair;
+}
+
+.chart-tooltip {
+    position: absolute;
+    min-width: 170px;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    pointer-events: none;
+}
+
+.chart-tooltip-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #475569;
+}
+
+    .chart-tooltip-row b {
+        margin-left: auto;
+        color: #111827;
+        font-variant-numeric: tabular-nums;
+    }
+
+.chart-table {
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+    .chart-table summary {
+        color: #4338ca;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .chart-table table {
+        width: 100%;
+        margin-top: 8px;
+        border-collapse: collapse;
+    }
+
+    .chart-table th,
+    .chart-table td {
+        padding: 6px 8px;
+        border-bottom: 1px solid #f1f5f9;
+        text-align: left;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .chart-table th {
+        color: #64748b;
+    }
+
+@media (max-width: 900px) {
+    .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 600px) {
+    .owner-header {
+        flex-direction: column;
+    }
+
     .application-form-row {
         grid-template-columns: 1fr;
     }

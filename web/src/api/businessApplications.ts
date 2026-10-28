@@ -10,12 +10,18 @@ export async function createBusinessApplication(
         `${API_BASE_URL}/api/business-applications`,
         {
             method: "POST",
+            // Başvuru giriş yapmış hesaba bağlanır.
+            credentials: "include",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(request),
         }
     );
+
+    if (response.status === 401) {
+        throw new Error("Oturumun sona ermiş. Lütfen tekrar giriş yap.");
+    }
 
     if (!response.ok) {
         throw new Error(
