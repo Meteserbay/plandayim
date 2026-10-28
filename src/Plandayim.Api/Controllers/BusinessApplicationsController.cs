@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Plandayim.Api.Auth;
 using Plandayim.Application.BusinessApplications;
 
 namespace Plandayim.Api.Controllers;
@@ -15,13 +17,17 @@ public sealed class BusinessApplicationsController : ControllerBase
         _service = service;
     }
 
+    // Başvuru hesaba bağlanır; onaylanınca firma bu hesabın paneline düşer.
+    [Authorize(Policy = AuthPolicies.Owner)]
     [HttpPost]
     public async Task<IActionResult> Create(
         [FromBody] CreateBusinessApplicationRequest request,
         CancellationToken cancellationToken)
     {
-        var applicationId =
-            await _service.CreateAsync(request, cancellationToken);
+        var applicationId = await _service.CreateAsync(
+            request,
+            User.GetUserId(),
+            cancellationToken);
 
         return Created(
             $"/api/business-applications/{applicationId}",

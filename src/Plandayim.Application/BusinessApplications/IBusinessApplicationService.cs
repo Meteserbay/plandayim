@@ -6,6 +6,11 @@ public interface IBusinessApplicationService
 {
     Task<long> CreateAsync(
         CreateBusinessApplicationRequest request,
+        long applicantUserId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<BusinessApplicationDto>> ListForApplicantAsync(
+        long applicantUserId,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<BusinessApplicationDto>> ListAsync(

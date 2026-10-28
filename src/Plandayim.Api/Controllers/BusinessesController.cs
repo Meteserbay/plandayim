@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Plandayim.Api.Auth;
 using Plandayim.Application.Businesses;
 
 namespace Plandayim.Api.Controllers;
@@ -21,9 +22,15 @@ public sealed class BusinessesController : ControllerBase
     [FromBody] CreateBusinessInteractionRequest request,
     CancellationToken cancellationToken)
     {
+        // Varsayılan şema firma sahibi çerezidir; giriş yoksa kimlik boş kalır.
+        long? viewerUserId = User.Identity?.IsAuthenticated == true
+            ? User.GetUserId()
+            : null;
+
         await _businessService.RecordInteractionAsync(
             businessId,
             request.Type,
+            viewerUserId,
             cancellationToken);
 
         return NoContent();

@@ -11,8 +11,14 @@ using Plandayim.Application.BusinessApplications;
 using Plandayim.Infrastructure.BusinessApplications;
 using Plandayim.Api.ErrorHandling;
 using Plandayim.Api.Admin;
-using Plandayim.Api.Controllers;
+using Plandayim.Api.Auth;
+using Plandayim.Application.Accounts;
+using Plandayim.Infrastructure.Accounts;
+using Plandayim.Application.OwnerBusinesses;
+using Plandayim.Infrastructure.OwnerBusinesses;
+using Plandayim.Domain.Users;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,43 +50,70 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.Configure<AdminOptions>(
     builder.Configuration.GetSection(AdminOptions.SectionName));
-builder.Services
-    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.Cookie.Name = "plandayim_admin";
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SameSite = SameSiteMode.Lax;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-        options.ExpireTimeSpan = TimeSpan.FromHours(8);
-        options.SlidingExpiration = true;
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IOwnerBusinessService, OwnerBusinessService>();
 
-        // API olduğu için giriş sayfasına yönlendirmek yerine 401/403 döner.
-        options.Events.OnRedirectToLogin = context =>
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return Task.CompletedTask;
-        };
-        options.Events.OnRedirectToAccessDenied = context =>
-        {
-            context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            return Task.CompletedTask;
-        };
-    });
-builder.Services.AddAuthorization();
+static void ConfigureApiCookie(
+    CookieAuthenticationOptions options,
+    string cookieName,
+    TimeSpan lifetime)
+{
+    options.Cookie.Name = cookieName;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.ExpireTimeSpan = lifetime;
+    options.SlidingExpiration = true;
+
+    // API olduğu için giriş sayfasına yönlendirmek yerine 401/403 döner.
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return Task.CompletedTask;
+    };
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return Task.CompletedTask;
+    };
+}
+
+builder.Services
+    .AddAuthentication(AuthSchemes.Owner)
+    .AddCookie(AuthSchemes.Admin, options =>
+        ConfigureApiCookie(options, "plandayim_admin", TimeSpan.FromHours(8)))
+    .AddCookie(AuthSchemes.Owner, options =>
+        ConfigureApiCookie(options, "plandayim_user", TimeSpan.FromDays(14)));
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(AuthPolicies.Admin, policy => policy
+        .AddAuthenticationSchemes(AuthSchemes.Admin)
+        .RequireRole("Admin"))
+    .AddPolicy(AuthPolicies.Owner, policy => policy
+        .AddAuthenticationSchemes(AuthSchemes.Owner)
+        .RequireAuthenticatedUser());
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    // Şifre denemelerini yavaşlatmak için IP başına dakikada 5 giriş denemesi.
-    options.AddPolicy(AdminAuthController.LoginRateLimitPolicy, httpContext =>
+    static RateLimitPartition<string> PerIp(
+        HttpContext httpContext,
+        int permitLimit) =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 5,
+                PermitLimit = permitLimit,
                 Window = TimeSpan.FromMinutes(1)
-            }));
+            });
+
+    // Şifre denemelerini yavaşlatmak için IP başına dakikalık sınırlar.
+    options.AddPolicy(
+        RateLimitPolicies.AdminLogin,
+        httpContext => PerIp(httpContext, 5));
+    options.AddPolicy(
+        RateLimitPolicies.Account,
+        httpContext => PerIp(httpContext, 10));
 });
 builder.Services.AddCors(options =>
 {

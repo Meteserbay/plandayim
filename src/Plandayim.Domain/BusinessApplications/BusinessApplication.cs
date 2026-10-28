@@ -15,7 +15,8 @@ public class BusinessApplication : BaseEntity
         string email,
         BusinessApplicationType type,
         long? businessId = null,
-        string? message = null)
+        string? message = null,
+        long? applicantUserId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(businessName);
         ArgumentException.ThrowIfNullOrWhiteSpace(contactName);
@@ -36,12 +37,17 @@ public class BusinessApplication : BaseEntity
         Type = type;
         BusinessId = businessId;
         Message = message;
+        ApplicantUserId = applicantUserId;
 
         Status = BusinessApplicationStatus.Pending;
         CreatedAtUtc = DateTime.UtcNow;
     }
 
     public long? BusinessId { get; private set; }
+
+    // Başvuruyu gönderen hesap. Onaylanınca firma bu hesaba bağlanır.
+    // Hesap sistemi öncesi gönderilen başvurularda boştur.
+    public long? ApplicantUserId { get; private set; }
 
     public string BusinessName { get; private set; } = null!;
 

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Plandayim.Domain.Businesses;
 using Plandayim.Domain.Locations;
+using Plandayim.Domain.Users;
 namespace Plandayim.Infrastructure.Persistence.Configurations;
 
 public class BusinessConfiguration : IEntityTypeConfiguration<Business>
@@ -63,6 +64,13 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business>
         builder.HasOne<District>()
             .WithMany()
             .HasForeignKey(x => x.DistrictId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => x.OwnerUserId);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(x => x.OwnerUserId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 

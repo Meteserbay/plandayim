@@ -13,5 +13,7 @@ public sealed record BusinessApplicationDto(
     string PhoneNumber,
     string Email,
     string? Message,
+    long? ApplicantUserId,
+    string? ApplicantEmail,
     DateTime CreatedAtUtc,
     DateTime? UpdatedAtUtc);

@@ -12,8 +12,13 @@ public interface IBusinessService
         string slug,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Etkileşimi kaydeder. Ziyaretçi işletmenin sahibiyse kaydetmez;
+    /// sahibin kendi profiline bakması istatistikleri şişirmemeli.
+    /// </summary>
     Task RecordInteractionAsync(
     long businessId,
     BusinessInteractionType type,
+    long? viewerUserId,
     CancellationToken cancellationToken = default);
 }
