@@ -40,8 +40,16 @@ function BusinessDetailPage() {
             return;
         }
 
+        // Effect yeniden çalışırsa (slug değişimi, StrictMode) eski isteğin
+        // sonucu yok sayılır; aksi halde sayaç yanlış gösterilebilir.
+        let isCancelled = false;
+
         getBusinessBySlug(slug)
             .then(async (data) => {
+                if (isCancelled) {
+                    return;
+                }
+
                 const shouldRecordView = markProfileViewed(data.id);
 
                 // Bu ziyaret de sayılacağı için sayaca hemen yansıtılır.
@@ -62,11 +70,19 @@ function BusinessDetailPage() {
                 }
             })
             .catch(() => {
-                setError("İşletme bilgileri alınamadı.");
+                if (!isCancelled) {
+                    setError("İşletme bilgileri alınamadı.");
+                }
             })
             .finally(() => {
-                setIsLoading(false);
+                if (!isCancelled) {
+                    setIsLoading(false);
+                }
             });
+
+        return () => {
+            isCancelled = true;
+        };
     }, [slug]);
 
     if (isLoading) {
