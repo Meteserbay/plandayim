@@ -6,7 +6,7 @@ export async function getCategories(): Promise<Category[]> {
     const response = await fetch(`${API_BASE_URL}/api/categories`);
 
     if (!response.ok) {
-        throw new Error("Kategoriler alýnamadý.");
+        throw new Error("Kategoriler alÄ±namadÄ±.");
     }
 
     return response.json();

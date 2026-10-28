@@ -21,7 +21,7 @@ export async function recordBusinessInteraction(
     );
 
     if (!response.ok) {
-        throw new Error("Etkileþim kaydedilemedi.");
+        throw new Error("EtkileÅŸim kaydedilemedi.");
     }
 }
 
@@ -34,7 +34,7 @@ export async function searchBusinesses(
     );
 
     if (!response.ok) {
-        throw new Error("Firmalar alýnamadý.");
+        throw new Error("Firmalar alÄ±namadÄ±.");
     }
 
     return response.json();
@@ -48,7 +48,7 @@ export async function getBusinessBySlug(
     );
 
     if (!response.ok) {
-        throw new Error("Ýþletme bulunamadý.");
+        throw new Error("Ä°ÅŸletme bulunamadÄ±.");
     }
 
     return response.json();

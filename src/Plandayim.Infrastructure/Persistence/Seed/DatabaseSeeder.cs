@@ -53,23 +53,23 @@ public static class DatabaseSeeder
     {
         return
         [
-            new Category("Düðün Salonu", "dugun-salonu"),
-            new Category("Düðün Organizasyonu", "dugun-organizasyonu"),
-            new Category("Kýna Organizasyonu", "kina-organizasyonu"),
-            new Category("Niþan Organizasyonu", "nisan-organizasyonu"),
-            new Category("Fotoðrafçý", "fotografci"),
+            new Category("DÃ¼ÄŸÃ¼n Salonu", "dugun-salonu"),
+            new Category("DÃ¼ÄŸÃ¼n Organizasyonu", "dugun-organizasyonu"),
+            new Category("KÄ±na Organizasyonu", "kina-organizasyonu"),
+            new Category("NiÅŸan Organizasyonu", "nisan-organizasyonu"),
+            new Category("FotoÄŸrafÃ§Ä±", "fotografci"),
             new Category("Videographer", "videographer"),
             new Category("DJ", "dj"),
             new Category("Orkestra", "orkestra"),
             new Category("Gelinlik", "gelinlik"),
-            new Category("Gelin Saçý", "gelin-saci"),
-            new Category("Gelin Arabasý", "gelin-arabasi"),
-            new Category("Gelin Arabasý Süsleme", "gelin-arabasi-susleme"),
-            new Category("Çiçekçi", "cicekci"),
+            new Category("Gelin SaÃ§Ä±", "gelin-saci"),
+            new Category("Gelin ArabasÄ±", "gelin-arabasi"),
+            new Category("Gelin ArabasÄ± SÃ¼sleme", "gelin-arabasi-susleme"),
+            new Category("Ã‡iÃ§ekÃ§i", "cicekci"),
             new Category("Pasta", "pasta"),
             new Category("Catering", "catering"),
-            new Category("Lokma Daðýtýmý", "lokma-dagitimi"),
-            new Category("Pilav Daðýtýmý", "pilav-dagitimi")
+            new Category("Lokma DaÄŸÄ±tÄ±mÄ±", "lokma-dagitimi"),
+            new Category("Pilav DaÄŸÄ±tÄ±mÄ±", "pilav-dagitimi")
         ];
     }
 }

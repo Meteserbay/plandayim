@@ -6,7 +6,7 @@ export async function getCities(): Promise<City[]> {
     const response = await fetch(`${API_BASE_URL}/api/cities`);
 
     if (!response.ok) {
-        throw new Error("Þehirler alýnamadý.");
+        throw new Error("Åžehirler alÄ±namadÄ±.");
     }
 
     return response.json();
@@ -18,7 +18,7 @@ export async function getDistricts(cityId: number): Promise<District[]> {
     );
 
     if (!response.ok) {
-        throw new Error("Ýlçeler alýnamadý.");
+        throw new Error("Ä°lÃ§eler alÄ±namadÄ±.");
     }
 
     return response.json();
