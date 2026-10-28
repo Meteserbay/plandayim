@@ -18,6 +18,7 @@ public sealed record BusinessDetailDto(
     decimal? Latitude,
     decimal? Longitude,
     bool IsVerified,
+    int ProfileViewCount,
     IReadOnlyList<string> Categories,
     IReadOnlyList<string> ServiceAreas,
     IReadOnlyList<BusinessCampaignDto> Campaigns,

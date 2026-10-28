@@ -35,6 +35,7 @@ export interface BusinessDetail {
     longitude?: number | null;
 
     isVerified: boolean;
+    profileViewCount: number;
 
     categories: string[];
     serviceAreas: string[];

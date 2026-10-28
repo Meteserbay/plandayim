@@ -8,6 +8,24 @@ import {
 } from "../api/businesses";
 import type { BusinessDetail } from "../types/business";
 
+// Aynı oturumda sayfa yenilense bile profil görüntülenmesi bir kez sayılır.
+// true dönerse bu ziyaret kaydedilmelidir.
+function markProfileViewed(businessId: number): boolean {
+    const key = `plandayim:viewed-business:${businessId}`;
+
+    try {
+        if (sessionStorage.getItem(key)) {
+            return false;
+        }
+
+        sessionStorage.setItem(key, "1");
+    } catch {
+        // Depolama kullanılamıyorsa (gizli sekme vb.) yine de kaydedilir.
+    }
+
+    return true;
+}
+
 function BusinessDetailPage() {
     const { slug } = useParams();
     const [copiedCampaignCode, setCopiedCampaignCode] = useState<string | null>(null);
@@ -24,7 +42,18 @@ function BusinessDetailPage() {
 
         getBusinessBySlug(slug)
             .then(async (data) => {
-                setBusiness(data);
+                const shouldRecordView = markProfileViewed(data.id);
+
+                // Bu ziyaret de sayılacağı için sayaca hemen yansıtılır.
+                setBusiness({
+                    ...data,
+                    profileViewCount:
+                        data.profileViewCount + (shouldRecordView ? 1 : 0),
+                });
+
+                if (!shouldRecordView) {
+                    return;
+                }
 
                 try {
                     await recordBusinessInteraction(data.id, 4);
@@ -69,6 +98,10 @@ function BusinessDetailPage() {
     }
 
     async function copyCampaignCode(code: string) {
+        if (!business) {
+            return;
+        }
+
         try {
             await navigator.clipboard.writeText(code);
 
@@ -119,6 +152,10 @@ function BusinessDetailPage() {
 
                             <p className="profile-location">
                                 {business.cityName} / {business.districtName}
+                            </p>
+
+                            <p className="profile-stats">
+                                👁 {business.profileViewCount.toLocaleString("tr-TR")} kez görüntülendi
                             </p>
 
                             {business.isVerified && (
@@ -290,6 +327,13 @@ function BusinessDetailPage() {
                                 </p>
                             )}
                         </section>
+
+                        <Link
+                            className="claim-link"
+                            to={`/firmalar-icin?isletme=${business.id}&ad=${encodeURIComponent(business.name)}`}
+                        >
+                            Bu işletme senin mi? Profili sahiplen →
+                        </Link>
                     </aside>
                 </div>
             </div>

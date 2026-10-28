@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Plandayim.Application.Businesses;
 using Plandayim.Domain.Businesses;
 using Plandayim.Infrastructure.Persistence;
-
 namespace Plandayim.Infrastructure.Businesses;
 
 public sealed class BusinessService : IBusinessService
@@ -123,6 +122,13 @@ public sealed class BusinessService : IBusinessService
         x.IsCover))
     .ToListAsync(cancellationToken);
 
+        var profileViewCount = await _dbContext.BusinessInteractions
+            .AsNoTracking()
+            .CountAsync(
+                x => x.BusinessId == business.Id &&
+                     x.Type == BusinessInteractionType.ProfileView,
+                cancellationToken);
+
         return new BusinessDetailDto(
     business.Id,
     business.Name,
@@ -141,6 +147,7 @@ public sealed class BusinessService : IBusinessService
     business.Latitude,
     business.Longitude,
     business.IsVerified,
+    profileViewCount,
     categories,
     serviceAreas,
     campaigns,
