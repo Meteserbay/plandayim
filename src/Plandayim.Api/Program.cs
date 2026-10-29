@@ -25,10 +25,32 @@ using Plandayim.Application.Common;
 using Plandayim.Infrastructure.Storage;
 using Plandayim.Application.AdminBusinesses;
 using Plandayim.Infrastructure.AdminBusinesses;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Hosting.WindowsServices;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    // Windows servisi olarak çalışırken içerik kökü uygulama klasörüdür.
+    ContentRootPath = WindowsServiceHelpers.IsWindowsService()
+        ? AppContext.BaseDirectory
+        : null
+});
+
+builder.Host.UseWindowsService(options => options.ServiceName = "Plandayim");
+
+// Sunucuya özel ayarlar (bağlantı dizesi, admin şifresi, klasörler) uygulama
+// klasörünün yanındaki config\appsettings.local.json dosyasında durur; her
+// güncellemede uygulama klasörü değişse de bu dosya korunur ve git'e girmez.
+builder.Configuration.AddJsonFile(
+    Path.Combine(builder.Environment.ContentRootPath, "..", "config", "appsettings.local.json"),
+    optional: true,
+    reloadOnChange: false);
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("DefaultConnection connection string was not found.");
+var seedSampleBusinesses = builder.Configuration.GetValue<bool>("Seed:SampleBusinesses");
 
 builder.Services.AddDbContext<PlandayimDbContext>(options =>
 {
@@ -36,7 +58,7 @@ builder.Services.AddDbContext<PlandayimDbContext>(options =>
 
     options.UseSeeding((context, _) =>
     {
-        DatabaseSeeder.Seed(context);
+        DatabaseSeeder.Seed(context, seedSampleBusinesses);
     });
 
     options.UseAsyncSeeding(async (context, _, cancellationToken) =>
@@ -150,12 +172,39 @@ builder.Services.AddCors(options =>
             .AllowCredentials();
     });
 });
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+// Site Cloudflare Tunnel arkasında çalışır: istek uygulamaya localhost'tan
+// düz HTTP olarak gelir. Gerçek ziyaretçi IP'si (hız sınırı için) ve HTTPS
+// bilgisi (güvenli çerezler için) yönlendirme başlıklarından okunur. Varsayılan
+// olarak bu başlıklara sadece localhost'tan gelen isteklerde güvenilir.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+});
+
+// Oturum çerezlerini imzalayan anahtarlar kalıcı bir klasörde tutulur; aksi
+// halde yeniden başlatmada herkesin oturumu düşebilir.
+var dataProtection = builder.Services
+    .AddDataProtection()
+    .SetApplicationName("Plandayim");
+var keysPath = builder.Configuration["DataProtection:KeysPath"];
+
+if (!string.IsNullOrWhiteSpace(keysPath))
+{
+    dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+}
+
 var app = builder.Build();
+app.UseForwardedHeaders();
 app.UseExceptionHandler();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
 app.UseCors("Frontend");
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -169,40 +218,30 @@ app.UseStaticFiles(new StaticFileOptions
         context.Context.Response.Headers.CacheControl = "public,max-age=31536000,immutable";
     }
 });
+// Yayında frontend (web/dist) uygulamanın wwwroot klasörüne kopyalanır ve
+// aynı adresten servis edilir; böylece site ve API tek alan adında çalışır.
+// HTTPS yönlendirmesini Cloudflare yaptığı için burada yapılmaz.
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-// Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+// Bilinmeyen API adresleri sayfa yerine 404 döner.
+app.Map("/api/{**rest}", () => Results.Problem(
+    statusCode: StatusCodes.Status404NotFound,
+    title: "Kayıt bulunamadı."));
 
-var summaries = new[]
+// /panel, /business/... gibi sayfa adresleri React uygulamasına yönlenir.
+if (File.Exists(Path.Combine(app.Environment.WebRootPath ?? "", "index.html")))
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    app.MapFallbackToFile("index.html");
+}
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
