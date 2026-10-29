@@ -485,3 +485,6 @@ $RECYCLE.BIN/
 
 # React / Vite
 web/dist/
+
+# Kullanıcıların yüklediği görseller
+src/Plandayim.Api/wwwroot/uploads/

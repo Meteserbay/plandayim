@@ -3,6 +3,7 @@ import type {
     BusinessStats,
     OwnerBusinessProfile,
     OwnerCampaign,
+    OwnerImages,
     SaveCampaignRequest,
     UpdateBusinessProfileRequest,
 } from "../types/owner";
@@ -132,6 +133,82 @@ export async function setCampaignActive(
     );
 
     return response.json();
+}
+
+async function imagesRequest(
+    businessId: number,
+    path: string,
+    fallbackError: string,
+    init: RequestInit = {}
+): Promise<OwnerImages> {
+    const response = await ownerFetch(
+        `${businessPath(businessId)}/${path}`,
+        fallbackError,
+        init
+    );
+
+    return response.json();
+}
+
+export function getImages(businessId: number): Promise<OwnerImages> {
+    return imagesRequest(businessId, "images", "Görseller alınamadı.");
+}
+
+export function uploadImage(businessId: number, file: File): Promise<OwnerImages> {
+    const body = new FormData();
+    body.append("file", file);
+
+    return imagesRequest(businessId, "images", "Görsel yüklenemedi.", {
+        method: "POST",
+        body,
+    });
+}
+
+export function setCoverImage(
+    businessId: number,
+    imageId: number
+): Promise<OwnerImages> {
+    return imagesRequest(
+        businessId,
+        `images/${imageId}/cover`,
+        "Kapak görseli değiştirilemedi.",
+        { method: "POST" }
+    );
+}
+
+export function reorderImages(
+    businessId: number,
+    imageIds: number[]
+): Promise<OwnerImages> {
+    return imagesRequest(businessId, "images/order", "Sıralama kaydedilemedi.", {
+        method: "PUT",
+        body: JSON.stringify({ imageIds }),
+    });
+}
+
+export function deleteImage(
+    businessId: number,
+    imageId: number
+): Promise<OwnerImages> {
+    return imagesRequest(businessId, `images/${imageId}`, "Görsel silinemedi.", {
+        method: "DELETE",
+    });
+}
+
+export function uploadLogo(businessId: number, file: File): Promise<OwnerImages> {
+    const body = new FormData();
+    body.append("file", file);
+
+    return imagesRequest(businessId, "logo", "Logo yüklenemedi.", {
+        method: "POST",
+        body,
+    });
+}
+
+export function deleteLogo(businessId: number): Promise<OwnerImages> {
+    return imagesRequest(businessId, "logo", "Logo kaldırılamadı.", {
+        method: "DELETE",
+    });
 }
 
 export async function deleteCampaign(

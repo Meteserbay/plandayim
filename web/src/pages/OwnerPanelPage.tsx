@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import StatsTab from "../components/owner/StatsTab";
 import ProfileTab from "../components/owner/ProfileTab";
 import CampaignsTab from "../components/owner/CampaignsTab";
+import ImagesTab from "../components/owner/ImagesTab";
 import { useAccount } from "../account/AccountContext";
 import { UnauthorizedError } from "../api/admin";
 import { getMyApplications } from "../api/owner";
@@ -18,6 +19,7 @@ const tabs = [
     { id: "istatistikler", label: "İstatistikler" },
     { id: "profil", label: "Profil" },
     { id: "kampanyalar", label: "Kampanyalar" },
+    { id: "gorseller", label: "Görseller" },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -214,6 +216,14 @@ function OwnerPanelPage() {
 
                         {activeTab === "kampanyalar" && (
                             <CampaignsTab
+                                key={selectedBusiness.id}
+                                businessId={selectedBusiness.id}
+                                onError={handleError}
+                            />
+                        )}
+
+                        {activeTab === "gorseller" && (
+                            <ImagesTab
                                 key={selectedBusiness.id}
                                 businessId={selectedBusiness.id}
                                 onError={handleError}

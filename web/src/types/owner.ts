@@ -55,6 +55,20 @@ export interface SaveCampaignRequest {
     endsOn?: string | null;
 }
 
+export interface OwnerImage {
+    id: number;
+    url: string;
+    altText?: string | null;
+    sortOrder: number;
+    isCover: boolean;
+}
+
+export interface OwnerImages {
+    logoUrl?: string | null;
+    images: OwnerImage[];
+    maxImages: number;
+}
+
 export interface BusinessStats {
     days: number;
     totals: InteractionTotals;

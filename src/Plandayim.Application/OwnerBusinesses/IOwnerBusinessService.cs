@@ -54,4 +54,45 @@ public interface IOwnerBusinessService
         long businessId,
         long campaignId,
         CancellationToken cancellationToken = default);
+
+    Task<OwnerImagesDto> GetImagesAsync(
+        long userId,
+        long businessId,
+        CancellationToken cancellationToken = default);
+
+    Task<OwnerImagesDto> AddImageAsync(
+        long userId,
+        long businessId,
+        ImageUpload upload,
+        string? altText,
+        CancellationToken cancellationToken = default);
+
+    Task<OwnerImagesDto> SetCoverImageAsync(
+        long userId,
+        long businessId,
+        long imageId,
+        CancellationToken cancellationToken = default);
+
+    Task<OwnerImagesDto> ReorderImagesAsync(
+        long userId,
+        long businessId,
+        ReorderImagesRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<OwnerImagesDto> DeleteImageAsync(
+        long userId,
+        long businessId,
+        long imageId,
+        CancellationToken cancellationToken = default);
+
+    Task<OwnerImagesDto> SetLogoAsync(
+        long userId,
+        long businessId,
+        ImageUpload upload,
+        CancellationToken cancellationToken = default);
+
+    Task<OwnerImagesDto> DeleteLogoAsync(
+        long userId,
+        long businessId,
+        CancellationToken cancellationToken = default);
 }

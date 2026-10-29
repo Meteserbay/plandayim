@@ -3,6 +3,7 @@ using Plandayim.Application.Common;
 using Plandayim.Application.OwnerBusinesses;
 using Plandayim.Domain.Businesses;
 using Plandayim.Infrastructure.Persistence;
+using Plandayim.Infrastructure.Storage;
 
 namespace Plandayim.Infrastructure.OwnerBusinesses;
 
@@ -15,11 +16,17 @@ public sealed class OwnerBusinessService : IOwnerBusinessService
 
     private const int MaxCampaignsPerBusiness = 10;
 
-    private readonly PlandayimDbContext _dbContext;
+    private const int MaxImagesPerBusiness = 12;
 
-    public OwnerBusinessService(PlandayimDbContext dbContext)
+    private readonly PlandayimDbContext _dbContext;
+    private readonly IFileStorage _fileStorage;
+
+    public OwnerBusinessService(
+        PlandayimDbContext dbContext,
+        IFileStorage fileStorage)
     {
         _dbContext = dbContext;
+        _fileStorage = fileStorage;
     }
 
     public async Task<BusinessStatsDto> GetStatsAsync(
@@ -299,6 +306,261 @@ public sealed class OwnerBusinessService : IOwnerBusinessService
         _dbContext.BusinessCampaigns.Remove(campaign);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<OwnerImagesDto> GetImagesAsync(
+        long userId,
+        long businessId,
+        CancellationToken cancellationToken = default)
+    {
+        var business = await GetOwnedBusinessAsync(
+            userId,
+            businessId,
+            cancellationToken);
+
+        return await ToImagesDtoAsync(business, cancellationToken);
+    }
+
+    public async Task<OwnerImagesDto> AddImageAsync(
+        long userId,
+        long businessId,
+        ImageUpload upload,
+        string? altText,
+        CancellationToken cancellationToken = default)
+    {
+        var business = await GetOwnedBusinessAsync(
+            userId,
+            businessId,
+            cancellationToken);
+
+        var images = await _dbContext.BusinessImages
+            .Where(x => x.BusinessId == businessId)
+            .ToListAsync(cancellationToken);
+
+        if (images.Count >= MaxImagesPerBusiness)
+        {
+            throw new RequestValidationException(
+                $"Galeride en fazla {MaxImagesPerBusiness} görsel olabilir. Yenisini eklemek için birini sil.");
+        }
+
+        var url = await SaveImageFileAsync(upload, businessId, cancellationToken);
+
+        var image = new BusinessImage(
+            businessId,
+            url,
+            NullIfEmpty(altText) ?? business.Name,
+            images.Count == 0 ? 1 : images.Max(x => x.SortOrder) + 1,
+            // İlk yüklenen görsel otomatik olarak kapak olur.
+            isCover: !images.Any(x => x.IsCover));
+
+        _dbContext.BusinessImages.Add(image);
+
+        await SaveOrDeleteFileAsync(url, cancellationToken);
+
+        return await ToImagesDtoAsync(business, cancellationToken);
+    }
+
+    public async Task<OwnerImagesDto> SetCoverImageAsync(
+        long userId,
+        long businessId,
+        long imageId,
+        CancellationToken cancellationToken = default)
+    {
+        var business = await GetOwnedBusinessAsync(
+            userId,
+            businessId,
+            cancellationToken);
+
+        var images = await _dbContext.BusinessImages
+            .Where(x => x.BusinessId == businessId)
+            .ToListAsync(cancellationToken);
+
+        var cover = images.FirstOrDefault(x => x.Id == imageId)
+            ?? throw new KeyNotFoundException("Image not found.");
+
+        foreach (var image in images.Where(x => x.IsCover && x.Id != imageId))
+        {
+            image.RemoveAsCover();
+        }
+
+        cover.SetAsCover();
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return await ToImagesDtoAsync(business, cancellationToken);
+    }
+
+    public async Task<OwnerImagesDto> ReorderImagesAsync(
+        long userId,
+        long businessId,
+        ReorderImagesRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var business = await GetOwnedBusinessAsync(
+            userId,
+            businessId,
+            cancellationToken);
+
+        var images = await _dbContext.BusinessImages
+            .Where(x => x.BusinessId == businessId)
+            .ToListAsync(cancellationToken);
+
+        var requestedIds = request.ImageIds.Distinct().ToList();
+
+        if (requestedIds.Count != images.Count ||
+            !images.All(x => requestedIds.Contains(x.Id)))
+        {
+            throw new RequestValidationException(
+                "Görsel listesi güncel değil. Sayfayı yenileyip tekrar dene.");
+        }
+
+        for (var index = 0; index < requestedIds.Count; index++)
+        {
+            var image = images.First(x => x.Id == requestedIds[index]);
+
+            image.Update(image.Url, image.AltText, index + 1);
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return await ToImagesDtoAsync(business, cancellationToken);
+    }
+
+    public async Task<OwnerImagesDto> DeleteImageAsync(
+        long userId,
+        long businessId,
+        long imageId,
+        CancellationToken cancellationToken = default)
+    {
+        var business = await GetOwnedBusinessAsync(
+            userId,
+            businessId,
+            cancellationToken);
+
+        var images = await _dbContext.BusinessImages
+            .Where(x => x.BusinessId == businessId)
+            .OrderBy(x => x.SortOrder)
+            .ToListAsync(cancellationToken);
+
+        var image = images.FirstOrDefault(x => x.Id == imageId)
+            ?? throw new KeyNotFoundException("Image not found.");
+
+        _dbContext.BusinessImages.Remove(image);
+
+        // Kapak silinirse sıradaki ilk görsel kapak olur.
+        if (image.IsCover)
+        {
+            images.FirstOrDefault(x => x.Id != imageId)?.SetAsCover();
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _fileStorage.DeleteAsync(image.Url, cancellationToken);
+
+        return await ToImagesDtoAsync(business, cancellationToken);
+    }
+
+    public async Task<OwnerImagesDto> SetLogoAsync(
+        long userId,
+        long businessId,
+        ImageUpload upload,
+        CancellationToken cancellationToken = default)
+    {
+        var business = await GetOwnedBusinessAsync(
+            userId,
+            businessId,
+            cancellationToken);
+
+        var previousLogoUrl = business.LogoUrl;
+        var url = await SaveImageFileAsync(upload, businessId, cancellationToken);
+
+        business.UpdateLogo(url);
+
+        await SaveOrDeleteFileAsync(url, cancellationToken);
+
+        if (previousLogoUrl is not null)
+        {
+            await _fileStorage.DeleteAsync(previousLogoUrl, cancellationToken);
+        }
+
+        return await ToImagesDtoAsync(business, cancellationToken);
+    }
+
+    public async Task<OwnerImagesDto> DeleteLogoAsync(
+        long userId,
+        long businessId,
+        CancellationToken cancellationToken = default)
+    {
+        var business = await GetOwnedBusinessAsync(
+            userId,
+            businessId,
+            cancellationToken);
+
+        var previousLogoUrl = business.LogoUrl;
+
+        business.UpdateLogo(null);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        if (previousLogoUrl is not null)
+        {
+            await _fileStorage.DeleteAsync(previousLogoUrl, cancellationToken);
+        }
+
+        return await ToImagesDtoAsync(business, cancellationToken);
+    }
+
+    private async Task<string> SaveImageFileAsync(
+        ImageUpload upload,
+        long businessId,
+        CancellationToken cancellationToken)
+    {
+        var (content, extension) = await ImageFileValidator.ReadAsync(
+            upload,
+            cancellationToken);
+
+        await using (content)
+        {
+            return await _fileStorage.SaveAsync(
+                content,
+                $"businesses/{businessId}",
+                extension,
+                cancellationToken);
+        }
+    }
+
+    // Veritabanı kaydı başarısız olursa diske yazılan dosya sahipsiz kalmasın.
+    private async Task SaveOrDeleteFileAsync(
+        string url,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            await _fileStorage.DeleteAsync(url, CancellationToken.None);
+            throw;
+        }
+    }
+
+    private async Task<OwnerImagesDto> ToImagesDtoAsync(
+        Business business,
+        CancellationToken cancellationToken)
+    {
+        var images = await _dbContext.BusinessImages
+            .AsNoTracking()
+            .Where(x => x.BusinessId == business.Id)
+            .OrderBy(x => x.SortOrder)
+            .Select(x => new OwnerImageDto(
+                x.Id,
+                x.Url,
+                x.AltText,
+                x.SortOrder,
+                x.IsCover))
+            .ToListAsync(cancellationToken);
+
+        return new OwnerImagesDto(business.LogoUrl, images, MaxImagesPerBusiness);
     }
 
     private async Task<CampaignInput> ValidateCampaignAsync(

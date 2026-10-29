@@ -121,6 +121,120 @@ public sealed class OwnerBusinessesController : ControllerBase
             cancellationToken));
     }
 
+    // Multipart gövde için 5 MB dosya + form alanlarına pay bırakılır.
+    private const long UploadRequestLimit = 6 * 1024 * 1024;
+
+    [HttpGet("images")]
+    public async Task<ActionResult<OwnerImagesDto>> GetImages(
+        long businessId,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await _service.GetImagesAsync(
+            User.GetUserId(),
+            businessId,
+            cancellationToken));
+    }
+
+    [HttpPost("images")]
+    [RequestSizeLimit(UploadRequestLimit)]
+    [RequestFormLimits(MultipartBodyLengthLimit = UploadRequestLimit)]
+    public async Task<ActionResult<OwnerImagesDto>> AddImage(
+        long businessId,
+        IFormFile? file,
+        [FromForm] string? altText,
+        CancellationToken cancellationToken)
+    {
+        if (file is null)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Bir görsel seçmelisin.");
+        }
+
+        await using var stream = file.OpenReadStream();
+
+        return Ok(await _service.AddImageAsync(
+            User.GetUserId(),
+            businessId,
+            new ImageUpload(stream, file.Length),
+            altText,
+            cancellationToken));
+    }
+
+    [HttpPost("images/{imageId:long}/cover")]
+    public async Task<ActionResult<OwnerImagesDto>> SetCover(
+        long businessId,
+        long imageId,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await _service.SetCoverImageAsync(
+            User.GetUserId(),
+            businessId,
+            imageId,
+            cancellationToken));
+    }
+
+    [HttpPut("images/order")]
+    public async Task<ActionResult<OwnerImagesDto>> ReorderImages(
+        long businessId,
+        [FromBody] ReorderImagesRequest request,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await _service.ReorderImagesAsync(
+            User.GetUserId(),
+            businessId,
+            request,
+            cancellationToken));
+    }
+
+    [HttpDelete("images/{imageId:long}")]
+    public async Task<ActionResult<OwnerImagesDto>> DeleteImage(
+        long businessId,
+        long imageId,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await _service.DeleteImageAsync(
+            User.GetUserId(),
+            businessId,
+            imageId,
+            cancellationToken));
+    }
+
+    [HttpPost("logo")]
+    [RequestSizeLimit(UploadRequestLimit)]
+    [RequestFormLimits(MultipartBodyLengthLimit = UploadRequestLimit)]
+    public async Task<ActionResult<OwnerImagesDto>> SetLogo(
+        long businessId,
+        IFormFile? file,
+        CancellationToken cancellationToken)
+    {
+        if (file is null)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Bir görsel seçmelisin.");
+        }
+
+        await using var stream = file.OpenReadStream();
+
+        return Ok(await _service.SetLogoAsync(
+            User.GetUserId(),
+            businessId,
+            new ImageUpload(stream, file.Length),
+            cancellationToken));
+    }
+
+    [HttpDelete("logo")]
+    public async Task<ActionResult<OwnerImagesDto>> DeleteLogo(
+        long businessId,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await _service.DeleteLogoAsync(
+            User.GetUserId(),
+            businessId,
+            cancellationToken));
+    }
+
     [HttpDelete("campaigns/{campaignId:long}")]
     public async Task<IActionResult> DeleteCampaign(
         long businessId,

@@ -579,6 +579,83 @@ button {
         border: 1px solid #c7d2fe;
     }
 
+.owner-message {
+    margin-bottom: 16px;
+}
+
+.owner-logo {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 16px;
+}
+
+.owner-logo-preview {
+    width: 96px;
+    height: 96px;
+    flex-shrink: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+    .owner-logo-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+.owner-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.owner-gallery-item {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.owner-gallery-image {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f1f5f9;
+}
+
+    .owner-gallery-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+.owner-cover-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #4f46e5;
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.icon-button {
+    min-width: 38px;
+    padding: 0 10px;
+}
+
 .campaign-status-1 {
     background: #ecfdf5;
     color: #047857;

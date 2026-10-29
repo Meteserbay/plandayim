@@ -20,6 +20,9 @@ using Plandayim.Domain.Users;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using System.Threading.RateLimiting;
+using Microsoft.Extensions.FileProviders;
+using Plandayim.Application.Common;
+using Plandayim.Infrastructure.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -53,6 +56,19 @@ builder.Services.Configure<AdminOptions>(
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IOwnerBusinessService, OwnerBusinessService>();
+
+// Yüklenen görseller wwwroot/uploads altında saklanır ve /uploads adresinden
+// servis edilir. Sunucuda Storage:PublicBaseUrl gerçek alan adına ayarlanmalı.
+var uploadsRoot = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "uploads");
+var storageOptions = new LocalFileStorageOptions
+{
+    RootPath = builder.Configuration["Storage:RootPath"] ?? uploadsRoot,
+    PublicBaseUrl = builder.Configuration["Storage:PublicBaseUrl"]
+        ?? "http://localhost:5171/uploads"
+};
+Directory.CreateDirectory(storageOptions.RootPath);
+builder.Services.AddSingleton(storageOptions);
+builder.Services.AddSingleton<IFileStorage, LocalFileStorage>();
 
 static void ConfigureApiCookie(
     CookieAuthenticationOptions options,
@@ -133,6 +149,18 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 app.UseExceptionHandler();
 app.UseCors("Frontend");
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(storageOptions.RootPath),
+    RequestPath = "/uploads",
+    OnPrepareResponse = context =>
+    {
+        // Tarayıcı dosyayı uzantısından başka bir türmüş gibi yorumlamasın.
+        context.Context.Response.Headers.XContentTypeOptions = "nosniff";
+        // Dosya adları benzersiz olduğu ve değişmediği için uzun süre önbelleklenir.
+        context.Context.Response.Headers.CacheControl = "public,max-age=31536000,immutable";
+    }
+});
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
