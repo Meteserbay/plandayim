@@ -15,7 +15,7 @@ public static class BusinessSeeder
         }
 
         var istanbul = context.Set<City>()
-            .First(x => x.Name == "Ýstanbul");
+            .First(x => x.Name == "Ä°stanbul");
 
         var pendik = context.Set<District>()
             .First(x => x.CityId == istanbul.Id && x.Name == "Pendik");
@@ -27,7 +27,7 @@ public static class BusinessSeeder
             .First(x => x.CityId == istanbul.Id && x.Name == "Tuzla");
 
         var kadikoy = context.Set<District>()
-            .First(x => x.CityId == istanbul.Id && x.Name == "Kadýköy");
+            .First(x => x.CityId == istanbul.Id && x.Name == "KadÄ±kÃ¶y");
 
         var lokmaCategory = context.Set<Category>()
             .First(x => x.Slug == "lokma-dagitimi");
@@ -39,21 +39,27 @@ public static class BusinessSeeder
             .First(x => x.Slug == "dugun-organizasyonu");
 
         var lokmaci = new Business(
-            "Örnek Lokma",
-            "ornek-lokma",
+    "Ã–rnek Lokma",
+    "ornek-lokma",
+    "05550000001",
+    istanbul.Id,
+    pendik.Id);
+
+        lokmaci.UpdateContact(
             "05550000001",
-            istanbul.Id,
-            pendik.Id);
+            "905550000001",
+            "ornek@plandayim.com",
+            "https://example.com");
 
         var photographer = new Business(
-            "Örnek Fotoðraf",
+            "Ã–rnek FotoÄŸraf",
             "ornek-fotograf",
             "05550000002",
             istanbul.Id,
             kadikoy.Id);
 
         var organizer = new Business(
-            "Örnek Organizasyon",
+            "Ã–rnek Organizasyon",
             "ornek-organizasyon",
             "05550000003",
             istanbul.Id,
@@ -73,14 +79,14 @@ public static class BusinessSeeder
             new BusinessImage(
                 lokmaci.Id,
                 "https://images.unsplash.com/photo-1492684223066-81342ee5ff30",
-                "Örnek Lokma organizasyon görseli",
+                "Ã–rnek Lokma organizasyon gÃ¶rseli",
                 1,
                 true),
 
             new BusinessImage(
                 lokmaci.Id,
                 "https://images.unsplash.com/photo-1507504031003-b417219a0fde",
-                "Lokma daðýtým organizasyonu",
+                "Lokma daÄŸÄ±tÄ±m organizasyonu",
                 2),
 
             new BusinessImage(
@@ -124,9 +130,9 @@ public static class BusinessSeeder
         context.Set<BusinessCampaign>().Add(
             new BusinessCampaign(
                 lokmaci.Id,
-                "Plandayým'a Özel Ýndirim",
+                "PlandayÄ±m'a Ã–zel Ä°ndirim",
                 "PLANDAYIM10",
-                "Plandayým üzerinden gelen müþterilere özel avantaj.")
+                "PlandayÄ±m Ã¼zerinden gelen mÃ¼ÅŸterilere Ã¶zel avantaj.")
         );
 
         context.SaveChanges();

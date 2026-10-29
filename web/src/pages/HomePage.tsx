@@ -1,5 +1,7 @@
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { Link } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getCategories } from "../api/categories";
 import { getCities, getDistricts } from "../api/locations";
 import { searchBusinesses } from "../api/businesses";
@@ -16,6 +18,8 @@ function HomePage() {
     const [selectedCategoryId, setSelectedCategoryId] = useState("");
     const [selectedCityId, setSelectedCityId] = useState("");
     const [selectedDistrictId, setSelectedDistrictId] = useState("");
+    const resultsRef = useRef<HTMLElement | null>(null);
+    const [hasSearched, setHasSearched] = useState(false);
 
     useEffect(() => {
         getCategories()
@@ -54,6 +58,13 @@ function HomePage() {
             );
 
             setBusinesses(result);
+            setHasSearched(true);
+            setTimeout(() => {
+                resultsRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+            }, 100);
         } catch (error) {
             console.error(error);
         } finally {
@@ -62,17 +73,7 @@ function HomePage() {
     }
     return (
         <div className="page-shell">
-            <header className="site-header">
-                <div className="header-inner">
-                    <Link to="/" className="brand">
-                        Plandayım
-                    </Link>
-
-                    <a href="#" className="header-link">
-                        Firmalar için
-                    </a>
-                </div>
-            </header>
+            <Header />
 
             <section className="hero">
                 <div className="hero-inner">
@@ -164,8 +165,10 @@ function HomePage() {
                     </button>
                 </div>
             </section>
+            
 
-            <main className="content">
+            {hasSearched && (
+            <main className="content" ref={resultsRef}>
                 <h2 className="section-title">
                     Firmalar
                 </h2>
@@ -228,6 +231,128 @@ function HomePage() {
                     </div>
                 )}
             </main>
+            )}
+            <section className="popular-section">
+                <div className="popular-container">
+                    <div className="popular-heading">
+                        <div>
+                            <span className="section-eyebrow">
+                                KEŞFET
+                            </span>
+
+                            <h2>Popüler hizmetler</h2>
+
+                            <p>
+                                Organizasyonun için en çok ihtiyaç duyulan
+                                hizmetleri keşfet.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="category-grid">
+                        {categories.slice(0, 8).map((category) => (
+                            <button
+                                key={category.id}
+                                type="button"
+                                className={
+                                    selectedCategoryId === String(category.id)
+                                        ? "category-card category-card-active"
+                                        : "category-card"
+                                }
+                                onClick={() =>
+                                    setSelectedCategoryId(String(category.id))
+                                }
+                            >
+                                <span className="category-icon">
+                                    {category.name.charAt(0)}
+                                </span>
+
+                                <span className="category-name">
+                                    {category.name}
+                                </span>
+
+                                <span className="category-arrow">
+                                    →
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </section>
+            <section id="how-it-works" className="info-section">
+                <div className="info-container">
+                    <div className="section-heading">
+                        <span>Nasıl çalışır?</span>
+
+                        <h2>
+                            İhtiyacın olan hizmete birkaç adımda ulaş.
+                        </h2>
+
+                        <p>
+                            Kategori ve bölge seç, sana hizmet veren işletmeleri
+                            keşfet ve doğrudan iletişime geç.
+                        </p>
+                    </div>
+
+                    <div className="steps-grid">
+                        <article className="step-card">
+                            <span className="step-number">1</span>
+                            <h3>Hizmetini seç</h3>
+                            <p>
+                                İhtiyacın olan organizasyon hizmetini belirle.
+                            </p>
+                        </article>
+
+                        <article className="step-card">
+                            <span className="step-number">2</span>
+                            <h3>Bölgeni belirle</h3>
+                            <p>
+                                Şehir ve ilçeni seçerek sana hizmet veren
+                                işletmeleri görüntüle.
+                            </p>
+                        </article>
+
+                        <article className="step-card">
+                            <span className="step-number">3</span>
+                            <h3>Firmayla iletişime geç</h3>
+                            <p>
+                                Firma profilini incele ve doğrudan işletmeyle
+                                iletişime geç.
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section id="businesses" className="business-cta-section">
+                <div className="business-cta">
+                    <div className="business-cta-content">
+                        <span className="cta-eyebrow">
+                            Firmalar için
+                        </span>
+
+                        <h2>
+                            Yeni müşterilerin seni Plandayım'da bulsun.
+                        </h2>
+
+                        <p>
+                            İşletmeni Plandayım'a ekleyerek hizmet arayan
+                            müşterilerin seni keşfetmesini sağla.
+                        </p>
+                    </div>
+
+                    <div className="business-cta-action">
+                        <Link
+                            className="cta-button"
+                            to="/firmalar-icin"
+                        >
+                            İşletmemi Eklemek İstiyorum
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
+            <Footer />
         </div>
     );
 }

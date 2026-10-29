@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Plandayim.Application.Businesses;
+using Plandayim.Domain.Businesses;
 using Plandayim.Infrastructure.Persistence;
-
 namespace Plandayim.Infrastructure.Businesses;
 
 public sealed class BusinessService : IBusinessService
@@ -11,6 +11,31 @@ public sealed class BusinessService : IBusinessService
     public BusinessService(PlandayimDbContext dbContext)
     {
         _dbContext = dbContext;
+    }
+
+    public async Task RecordInteractionAsync(
+    long businessId,
+    BusinessInteractionType type,
+    CancellationToken cancellationToken = default)
+    {
+        var businessExists = await _dbContext.Businesses
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.Id == businessId && x.IsActive,
+                cancellationToken);
+
+        if (!businessExists)
+        {
+            throw new KeyNotFoundException("Business not found.");
+        }
+
+        var interaction = new BusinessInteraction(
+            businessId,
+            type);
+
+        _dbContext.BusinessInteractions.Add(interaction);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
     public async Task<BusinessDetailDto?> GetBySlugAsync(
     string slug,
@@ -97,6 +122,13 @@ public sealed class BusinessService : IBusinessService
         x.IsCover))
     .ToListAsync(cancellationToken);
 
+        var profileViewCount = await _dbContext.BusinessInteractions
+            .AsNoTracking()
+            .CountAsync(
+                x => x.BusinessId == business.Id &&
+                     x.Type == BusinessInteractionType.ProfileView,
+                cancellationToken);
+
         return new BusinessDetailDto(
     business.Id,
     business.Name,
@@ -115,6 +147,7 @@ public sealed class BusinessService : IBusinessService
     business.Latitude,
     business.Longitude,
     business.IsVerified,
+    profileViewCount,
     categories,
     serviceAreas,
     campaigns,

@@ -1,11 +1,34 @@
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
-import { getBusinessBySlug } from "../api/businesses";
+import {
+    getBusinessBySlug,
+    recordBusinessInteraction
+} from "../api/businesses";
 import type { BusinessDetail } from "../types/business";
+
+// Aynı oturumda sayfa yenilense bile profil görüntülenmesi bir kez sayılır.
+// true dönerse bu ziyaret kaydedilmelidir.
+function markProfileViewed(businessId: number): boolean {
+    const key = `plandayim:viewed-business:${businessId}`;
+
+    try {
+        if (sessionStorage.getItem(key)) {
+            return false;
+        }
+
+        sessionStorage.setItem(key, "1");
+    } catch {
+        // Depolama kullanılamıyorsa (gizli sekme vb.) yine de kaydedilir.
+    }
+
+    return true;
+}
 
 function BusinessDetailPage() {
     const { slug } = useParams();
-
+    const [copiedCampaignCode, setCopiedCampaignCode] = useState<string | null>(null);
     const [business, setBusiness] = useState<BusinessDetail | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
@@ -17,14 +40,49 @@ function BusinessDetailPage() {
             return;
         }
 
+        // Effect yeniden çalışırsa (slug değişimi, StrictMode) eski isteğin
+        // sonucu yok sayılır; aksi halde sayaç yanlış gösterilebilir.
+        let isCancelled = false;
+
         getBusinessBySlug(slug)
-            .then(setBusiness)
+            .then(async (data) => {
+                if (isCancelled) {
+                    return;
+                }
+
+                const shouldRecordView = markProfileViewed(data.id);
+
+                // Bu ziyaret de sayılacağı için sayaca hemen yansıtılır.
+                setBusiness({
+                    ...data,
+                    profileViewCount:
+                        data.profileViewCount + (shouldRecordView ? 1 : 0),
+                });
+
+                if (!shouldRecordView) {
+                    return;
+                }
+
+                try {
+                    await recordBusinessInteraction(data.id, 4);
+                } catch (error) {
+                    console.error("Profil görüntülenmesi kaydedilemedi:", error);
+                }
+            })
             .catch(() => {
-                setError("İşletme bilgileri alınamadı.");
+                if (!isCancelled) {
+                    setError("İşletme bilgileri alınamadı.");
+                }
             })
             .finally(() => {
-                setIsLoading(false);
+                if (!isCancelled) {
+                    setIsLoading(false);
+                }
             });
+
+        return () => {
+            isCancelled = true;
+        };
     }, [slug]);
 
     if (isLoading) {
@@ -46,9 +104,37 @@ function BusinessDetailPage() {
             </main>
         );
     }
+    function trackInteraction(type: number) {
+        if (!business) {
+            return;
+        }
 
+        recordBusinessInteraction(business.id, type)
+            .catch(console.error);
+    }
+
+    async function copyCampaignCode(code: string) {
+        if (!business) {
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(code);
+
+            setCopiedCampaignCode(code);
+
+            await recordBusinessInteraction(business.id, 5);
+
+            setTimeout(() => {
+                setCopiedCampaignCode(null);
+            }, 2000);
+        } catch (error) {
+            console.error("Kampanya kodu kopyalanamadı:", error);
+        }
+    }
     return (
         <div className="detail-page">
+            <Header />
             <div className="detail-container">
                 <Link to="/" className="back-link">
                     ← Ana sayfaya dön
@@ -84,6 +170,10 @@ function BusinessDetailPage() {
                                 {business.cityName} / {business.districtName}
                             </p>
 
+                            <p className="profile-stats">
+                                👁 {business.profileViewCount.toLocaleString("tr-TR")} kez görüntülendi
+                            </p>
+
                             {business.isVerified && (
                                 <span className="verified-badge">
                                     ✓ Doğrulanmış işletme
@@ -94,6 +184,7 @@ function BusinessDetailPage() {
                                 <a
                                     className="primary-action"
                                     href={`tel:${business.phoneNumber}`}
+                                    onClick={() => trackInteraction(1)}
                                 >
                                     Firmayı Ara
                                 </a>
@@ -101,11 +192,24 @@ function BusinessDetailPage() {
                                 {business.whatsAppNumber && (
                                     <a
                                         className="secondary-action"
-                                        href={`https://wa.me/${business.whatsAppNumber}`}
+                                        href={`https://wa.me/${business.whatsAppNumber.replace(/\D/g, "")}`}
                                         target="_blank"
                                         rel="noreferrer"
+                                        onClick={() => trackInteraction(2)}
                                     >
-                                        WhatsApp
+                                        WhatsApp'tan Yaz
+                                    </a>
+                                )}
+
+                                {business.websiteUrl && (
+                                    <a
+                                        className="secondary-action"
+                                        href={business.websiteUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        onClick={() => trackInteraction(3)}
+                                    >
+                                        Web Sitesine Git
                                     </a>
                                 )}
                             </div>
@@ -173,9 +277,21 @@ function BusinessDetailPage() {
 
                                 <p>{campaign.description}</p>
 
-                                <span className="campaign-code">
-                                    {campaign.code}
-                                </span>
+                                <div className="campaign-code-row">
+                                    <span className="campaign-code">
+                                        {campaign.code}
+                                    </span>
+
+                                    <button
+                                        type="button"
+                                        className="campaign-copy-button"
+                                        onClick={() => copyCampaignCode(campaign.code)}
+                                    >
+                                        {copiedCampaignCode === campaign.code
+                                            ? "Kopyalandı ✓"
+                                            : "Kopyala"}
+                                    </button>
+                                </div>
 
                                 <p>
                                     Firmayla iletişime geçerken bu kodu
@@ -190,8 +306,34 @@ function BusinessDetailPage() {
                             <p>
                                 <strong>Telefon</strong>
                                 <br />
-                                {business.phoneNumber}
+                                <a href={`tel:${business.phoneNumber}`}>
+                                    {business.phoneNumber}
+                                </a>
                             </p>
+
+                            {business.email && (
+                                <p>
+                                    <strong>E-posta</strong>
+                                    <br />
+                                    <a href={`mailto:${business.email}`}>
+                                        {business.email}
+                                    </a>
+                                </p>
+                            )}
+
+                            {business.websiteUrl && (
+                                <p>
+                                    <strong>Web Sitesi</strong>
+                                    <br />
+                                    <a
+                                        href={business.websiteUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        Siteyi ziyaret et
+                                    </a>
+                                </p>
+                            )}
 
                             {business.address && (
                                 <p>
@@ -201,9 +343,17 @@ function BusinessDetailPage() {
                                 </p>
                             )}
                         </section>
+
+                        <Link
+                            className="claim-link"
+                            to={`/firmalar-icin?isletme=${business.id}&ad=${encodeURIComponent(business.name)}`}
+                        >
+                            Bu işletme senin mi? Profili sahiplen →
+                        </Link>
                     </aside>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 }
