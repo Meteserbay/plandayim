@@ -2,6 +2,8 @@ import { Route, Routes } from "react-router";
 import HomePage from "./pages/HomePage";
 import BusinessDetailPage from "./pages/BusinessDetailPage";
 import BusinessApplicationPage from "./pages/BusinessApplicationPage";
+import AdminLoginPage from "./pages/AdminLoginPage";
+import AdminApplicationsPage from "./pages/AdminApplicationsPage";
 
 function App() {
     return (
@@ -15,6 +17,8 @@ function App() {
                 path="/firmalar-icin"
                 element={<BusinessApplicationPage />}
             />
+            <Route path="/admin/giris" element={<AdminLoginPage />} />
+            <Route path="/admin" element={<AdminApplicationsPage />} />
         </Routes>
     );
 }

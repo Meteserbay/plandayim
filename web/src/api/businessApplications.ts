@@ -1,11 +1,7 @@
 import type { CreateBusinessApplicationRequest } from "../types/businessApplication";
+import { readProblemMessage } from "./problem";
 
 const API_BASE_URL = "http://localhost:5171";
-
-interface ProblemDetails {
-    title?: string;
-    errors?: Record<string, string[]>;
-}
 
 export async function createBusinessApplication(
     request: CreateBusinessApplicationRequest
@@ -21,25 +17,12 @@ export async function createBusinessApplication(
         }
     );
 
-    if (response.ok) {
-        return;
+    if (!response.ok) {
+        throw new Error(
+            await readProblemMessage(
+                response,
+                "Başvuru gönderilemedi. Lütfen tekrar dene."
+            )
+        );
     }
-
-    let problem: ProblemDetails | null = null;
-
-    try {
-        problem = await response.json();
-    } catch {
-        // Gövde JSON değilse genel mesaj gösterilir.
-    }
-
-    const messages = problem?.errors
-        ? Object.values(problem.errors).flat()
-        : [];
-
-    throw new Error(
-        messages.length > 0
-            ? messages.join(" ")
-            : problem?.title ?? "Başvuru gönderilemedi. Lütfen tekrar dene."
-    );
 }

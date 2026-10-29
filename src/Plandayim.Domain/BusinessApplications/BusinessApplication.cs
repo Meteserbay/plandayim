@@ -57,12 +57,23 @@ public class BusinessApplication : BaseEntity
 
     public BusinessApplicationStatus Status { get; private set; }
 
-    public void Approve()
+    public void Approve(long? createdBusinessId = null)
     {
         if (Status != BusinessApplicationStatus.Pending)
         {
             throw new InvalidOperationException(
                 "Only pending applications can be approved.");
+        }
+
+        if (Type == BusinessApplicationType.AddBusiness)
+        {
+            if (!createdBusinessId.HasValue)
+            {
+                throw new ArgumentException(
+                    "Approving an add business application requires the created BusinessId.");
+            }
+
+            BusinessId = createdBusinessId;
         }
 
         Status = BusinessApplicationStatus.Approved;

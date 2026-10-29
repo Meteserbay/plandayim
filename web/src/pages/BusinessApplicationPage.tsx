@@ -139,6 +139,13 @@ function BusinessApplicationPage() {
                                     required
                                     maxLength={30}
                                 />
+
+                                {!isClaim && (
+                                    <span className="field-hint">
+                                        Onaylanırsa firma profilinde
+                                        iletişim numarası olarak gösterilir.
+                                    </span>
+                                )}
                             </div>
 
                             <div className="field">
