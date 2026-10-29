@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import StatsTab from "../components/owner/StatsTab";
+import ProfileTab from "../components/owner/ProfileTab";
+import CampaignsTab from "../components/owner/CampaignsTab";
 import { useAccount } from "../account/AccountContext";
 import { UnauthorizedError } from "../api/admin";
 import { getMyApplications } from "../api/owner";
@@ -14,6 +16,8 @@ import {
 
 const tabs = [
     { id: "istatistikler", label: "İstatistikler" },
+    { id: "profil", label: "Profil" },
+    { id: "kampanyalar", label: "Kampanyalar" },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -194,6 +198,22 @@ function OwnerPanelPage() {
 
                         {activeTab === "istatistikler" && (
                             <StatsTab
+                                key={selectedBusiness.id}
+                                businessId={selectedBusiness.id}
+                                onError={handleError}
+                            />
+                        )}
+
+                        {activeTab === "profil" && (
+                            <ProfileTab
+                                key={selectedBusiness.id}
+                                businessId={selectedBusiness.id}
+                                onError={handleError}
+                            />
+                        )}
+
+                        {activeTab === "kampanyalar" && (
+                            <CampaignsTab
                                 key={selectedBusiness.id}
                                 businessId={selectedBusiness.id}
                                 onError={handleError}

@@ -1,5 +1,11 @@
 import type { BusinessApplication } from "../types/businessApplication";
-import type { BusinessStats } from "../types/owner";
+import type {
+    BusinessStats,
+    OwnerBusinessProfile,
+    OwnerCampaign,
+    SaveCampaignRequest,
+    UpdateBusinessProfileRequest,
+} from "../types/owner";
 import { UnauthorizedError } from "./admin";
 import { readProblemMessage } from "./problem";
 
@@ -55,4 +61,86 @@ export async function getBusinessStats(
     );
 
     return response.json();
+}
+
+const businessPath = (businessId: number) =>
+    `/api/owner/businesses/${businessId}`;
+
+export async function getBusinessProfile(
+    businessId: number
+): Promise<OwnerBusinessProfile> {
+    const response = await ownerFetch(
+        `${businessPath(businessId)}/profile`,
+        "Profil bilgileri alınamadı."
+    );
+
+    return response.json();
+}
+
+export async function updateBusinessProfile(
+    businessId: number,
+    request: UpdateBusinessProfileRequest
+): Promise<OwnerBusinessProfile> {
+    const response = await ownerFetch(
+        `${businessPath(businessId)}/profile`,
+        "Profil kaydedilemedi.",
+        { method: "PUT", body: JSON.stringify(request) }
+    );
+
+    return response.json();
+}
+
+export async function getCampaigns(
+    businessId: number
+): Promise<OwnerCampaign[]> {
+    const response = await ownerFetch(
+        `${businessPath(businessId)}/campaigns`,
+        "Kampanyalar alınamadı."
+    );
+
+    return response.json();
+}
+
+export async function saveCampaign(
+    businessId: number,
+    request: SaveCampaignRequest,
+    campaignId?: number
+): Promise<OwnerCampaign> {
+    const response = await ownerFetch(
+        campaignId
+            ? `${businessPath(businessId)}/campaigns/${campaignId}`
+            : `${businessPath(businessId)}/campaigns`,
+        "Kampanya kaydedilemedi.",
+        {
+            method: campaignId ? "PUT" : "POST",
+            body: JSON.stringify(request),
+        }
+    );
+
+    return response.json();
+}
+
+export async function setCampaignActive(
+    businessId: number,
+    campaignId: number,
+    isActive: boolean
+): Promise<OwnerCampaign> {
+    const response = await ownerFetch(
+        `${businessPath(businessId)}/campaigns/${campaignId}/${isActive ? "activate" : "deactivate"}`,
+        "Kampanya güncellenemedi.",
+        { method: "POST" }
+    );
+
+    return response.json();
+}
+
+export async function deleteCampaign(
+    businessId: number,
+    campaignId: number
+): Promise<void> {
+    await ownerFetch(
+        `${businessPath(businessId)}/campaigns/${campaignId}`,
+        "Kampanya silinemedi.",
+        { method: "DELETE" }
+    );
 }

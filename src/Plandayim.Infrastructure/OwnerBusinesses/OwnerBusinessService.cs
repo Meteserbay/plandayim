@@ -13,6 +13,8 @@ public sealed class OwnerBusinessService : IOwnerBusinessService
     // Türkiye yaz saati uygulamadığı için sabit UTC+3 kullanılır.
     private const int TurkeyUtcOffsetHours = 3;
 
+    private const int MaxCampaignsPerBusiness = 10;
+
     private readonly PlandayimDbContext _dbContext;
 
     public OwnerBusinessService(PlandayimDbContext dbContext)
@@ -118,6 +120,337 @@ public sealed class OwnerBusinessService : IOwnerBusinessService
         }
     }
 
+    public async Task<OwnerBusinessProfileDto> GetProfileAsync(
+        long userId,
+        long businessId,
+        CancellationToken cancellationToken = default)
+    {
+        var business = await GetOwnedBusinessAsync(
+            userId,
+            businessId,
+            cancellationToken);
+
+        return ToProfileDto(business);
+    }
+
+    public async Task<OwnerBusinessProfileDto> UpdateProfileAsync(
+        long userId,
+        long businessId,
+        UpdateBusinessProfileRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var business = await GetOwnedBusinessAsync(
+            userId,
+            businessId,
+            cancellationToken);
+
+        business.UpdateDetails(
+            business.Name,
+            business.Slug,
+            NullIfEmpty(request.Description));
+
+        business.UpdateContact(
+            request.PhoneNumber.Trim(),
+            NullIfEmpty(request.WhatsAppNumber),
+            NullIfEmpty(request.Email),
+            NormalizeWebsiteUrl(request.WebsiteUrl));
+
+        business.UpdateLocation(
+            business.CityId,
+            business.DistrictId,
+            NullIfEmpty(request.Address),
+            business.Latitude,
+            business.Longitude);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return ToProfileDto(business);
+    }
+
+    public async Task<IReadOnlyList<OwnerCampaignDto>> ListCampaignsAsync(
+        long userId,
+        long businessId,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureOwnerAsync(userId, businessId, cancellationToken);
+
+        var campaigns = await _dbContext.BusinessCampaigns
+            .AsNoTracking()
+            .Where(x => x.BusinessId == businessId)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+
+        return campaigns.Select(ToCampaignDto).ToList();
+    }
+
+    public async Task<OwnerCampaignDto> CreateCampaignAsync(
+        long userId,
+        long businessId,
+        SaveCampaignRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureOwnerAsync(userId, businessId, cancellationToken);
+
+        var campaignCount = await _dbContext.BusinessCampaigns
+            .CountAsync(x => x.BusinessId == businessId, cancellationToken);
+
+        if (campaignCount >= MaxCampaignsPerBusiness)
+        {
+            throw new RequestValidationException(
+                $"En fazla {MaxCampaignsPerBusiness} kampanya ekleyebilirsin. Eskileri silerek yer açabilirsin.");
+        }
+
+        var input = await ValidateCampaignAsync(
+            businessId,
+            null,
+            request,
+            cancellationToken);
+
+        var campaign = new BusinessCampaign(
+            businessId,
+            input.Title,
+            input.Code,
+            input.Description);
+
+        campaign.Update(
+            input.Title,
+            input.Code,
+            input.Description,
+            input.StartsAtUtc,
+            input.EndsAtUtc);
+
+        _dbContext.BusinessCampaigns.Add(campaign);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return ToCampaignDto(campaign);
+    }
+
+    public async Task<OwnerCampaignDto> UpdateCampaignAsync(
+        long userId,
+        long businessId,
+        long campaignId,
+        SaveCampaignRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var campaign = await GetOwnedCampaignAsync(
+            userId,
+            businessId,
+            campaignId,
+            cancellationToken);
+
+        var input = await ValidateCampaignAsync(
+            businessId,
+            campaignId,
+            request,
+            cancellationToken);
+
+        campaign.Update(
+            input.Title,
+            input.Code,
+            input.Description,
+            input.StartsAtUtc,
+            input.EndsAtUtc);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return ToCampaignDto(campaign);
+    }
+
+    public async Task<OwnerCampaignDto> SetCampaignActiveAsync(
+        long userId,
+        long businessId,
+        long campaignId,
+        bool isActive,
+        CancellationToken cancellationToken = default)
+    {
+        var campaign = await GetOwnedCampaignAsync(
+            userId,
+            businessId,
+            campaignId,
+            cancellationToken);
+
+        if (isActive)
+        {
+            campaign.Activate();
+        }
+        else
+        {
+            campaign.Deactivate();
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return ToCampaignDto(campaign);
+    }
+
+    public async Task DeleteCampaignAsync(
+        long userId,
+        long businessId,
+        long campaignId,
+        CancellationToken cancellationToken = default)
+    {
+        var campaign = await GetOwnedCampaignAsync(
+            userId,
+            businessId,
+            campaignId,
+            cancellationToken);
+
+        _dbContext.BusinessCampaigns.Remove(campaign);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<CampaignInput> ValidateCampaignAsync(
+        long businessId,
+        long? campaignId,
+        SaveCampaignRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.StartsOn.HasValue &&
+            request.EndsOn.HasValue &&
+            request.EndsOn < request.StartsOn)
+        {
+            throw new RequestValidationException(
+                "Bitiş tarihi başlangıç tarihinden önce olamaz.");
+        }
+
+        var code = request.Code.Trim().ToUpperInvariant();
+
+        var codeTaken = await _dbContext.BusinessCampaigns
+            .AnyAsync(
+                x => x.BusinessId == businessId &&
+                     x.Code == code &&
+                     x.Id != campaignId,
+                cancellationToken);
+
+        if (codeTaken)
+        {
+            throw new RequestValidationException(
+                "Bu kod başka bir kampanyanda kullanılıyor.");
+        }
+
+        return new CampaignInput(
+            request.Title.Trim(),
+            code,
+            request.Description.Trim(),
+            request.StartsOn.HasValue
+                ? TurkeyDayStartUtc(request.StartsOn.Value)
+                : null,
+            // Bitiş günü dahil: ertesi günün başlangıcından 1 saniye öncesi.
+            request.EndsOn.HasValue
+                ? TurkeyDayStartUtc(request.EndsOn.Value.AddDays(1)).AddSeconds(-1)
+                : null);
+    }
+
+    private async Task<Business> GetOwnedBusinessAsync(
+        long userId,
+        long businessId,
+        CancellationToken cancellationToken)
+    {
+        return await _dbContext.Businesses
+            .FirstOrDefaultAsync(
+                x => x.Id == businessId && x.OwnerUserId == userId,
+                cancellationToken)
+            ?? throw new KeyNotFoundException("Business not found.");
+    }
+
+    private async Task<BusinessCampaign> GetOwnedCampaignAsync(
+        long userId,
+        long businessId,
+        long campaignId,
+        CancellationToken cancellationToken)
+    {
+        await EnsureOwnerAsync(userId, businessId, cancellationToken);
+
+        return await _dbContext.BusinessCampaigns
+            .FirstOrDefaultAsync(
+                x => x.Id == campaignId && x.BusinessId == businessId,
+                cancellationToken)
+            ?? throw new KeyNotFoundException("Campaign not found.");
+    }
+
+    private static OwnerBusinessProfileDto ToProfileDto(Business business)
+    {
+        return new OwnerBusinessProfileDto(
+            business.Name,
+            business.Description,
+            business.PhoneNumber,
+            business.WhatsAppNumber,
+            business.Email,
+            business.WebsiteUrl,
+            business.Address);
+    }
+
+    private static OwnerCampaignDto ToCampaignDto(BusinessCampaign campaign)
+    {
+        var now = DateTime.UtcNow;
+
+        var visibility =
+            !campaign.IsActive ? CampaignVisibility.Disabled
+            : campaign.StartsAtUtc > now ? CampaignVisibility.Scheduled
+            : campaign.EndsAtUtc < now ? CampaignVisibility.Expired
+            : CampaignVisibility.Live;
+
+        return new OwnerCampaignDto(
+            campaign.Id,
+            campaign.Title,
+            campaign.Code,
+            campaign.Description,
+            campaign.StartsAtUtc.HasValue
+                ? ToTurkeyDate(campaign.StartsAtUtc.Value)
+                : null,
+            campaign.EndsAtUtc.HasValue
+                ? ToTurkeyDate(campaign.EndsAtUtc.Value)
+                : null,
+            campaign.IsActive,
+            visibility);
+    }
+
+    // Profilde link olarak gösterildiği için sadece http/https kabul edilir;
+    // "javascript:" gibi adresler ziyaretçinin tarayıcısında kod çalıştırabilir.
+    private static string? NormalizeWebsiteUrl(string? value)
+    {
+        var trimmed = NullIfEmpty(value);
+
+        if (trimmed is null)
+        {
+            return null;
+        }
+
+        if (!trimmed.Contains("://", StringComparison.Ordinal))
+        {
+            trimmed = $"https://{trimmed}";
+        }
+
+        if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var uri) ||
+            (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps) ||
+            !uri.Host.Contains('.'))
+        {
+            throw new RequestValidationException(
+                "Geçerli bir web sitesi adresi girin (örn. https://ornek.com).");
+        }
+
+        return uri.ToString();
+    }
+
+    private static string? NullIfEmpty(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static DateTime TurkeyDayStartUtc(DateOnly date)
+    {
+        return date
+            .ToDateTime(TimeOnly.MinValue)
+            .AddHours(-TurkeyUtcOffsetHours);
+    }
+
+    private static DateOnly ToTurkeyDate(DateTime utc)
+    {
+        return DateOnly.FromDateTime(utc.AddHours(TurkeyUtcOffsetHours));
+    }
+
     private async Task EnsureOwnerAsync(
         long userId,
         long businessId,
@@ -134,6 +467,13 @@ public sealed class OwnerBusinessService : IOwnerBusinessService
             throw new KeyNotFoundException("Business not found.");
         }
     }
+
+    private sealed record CampaignInput(
+        string Title,
+        string Code,
+        string Description,
+        DateTime? StartsAtUtc,
+        DateTime? EndsAtUtc);
 
     private sealed record InteractionCountRow(
         DateTime Day,
