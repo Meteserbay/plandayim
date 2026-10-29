@@ -1,6 +1,5 @@
 import type { City, District } from "../types/location";
-
-const API_BASE_URL = "http://localhost:5171";
+import { API_BASE_URL } from "./config";
 
 export async function getCities(): Promise<City[]> {
     const response = await fetch(`${API_BASE_URL}/api/cities`);

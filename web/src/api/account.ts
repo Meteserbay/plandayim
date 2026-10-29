@@ -1,7 +1,6 @@
 import type { Account } from "../types/account";
 import { readProblemMessage } from "./problem";
-
-const API_BASE_URL = "http://localhost:5171";
+import { API_BASE_URL } from "./config";
 
 const tooManyRequestsMessage =
     "Çok fazla deneme yaptın. Bir dakika sonra tekrar dene.";

@@ -1,7 +1,6 @@
 import type { CreateBusinessApplicationRequest } from "../types/businessApplication";
 import { readProblemMessage } from "./problem";
-
-const API_BASE_URL = "http://localhost:5171";
+import { API_BASE_URL } from "./config";
 
 export async function createBusinessApplication(
     request: CreateBusinessApplicationRequest

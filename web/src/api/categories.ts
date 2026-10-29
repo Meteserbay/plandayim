@@ -1,6 +1,5 @@
 import type { Category } from "../types/category";
-
-const API_BASE_URL = "http://localhost:5171";
+import { API_BASE_URL } from "./config";
 
 export async function getCategories(): Promise<Category[]> {
     const response = await fetch(`${API_BASE_URL}/api/categories`);
