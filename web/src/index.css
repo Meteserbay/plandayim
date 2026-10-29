@@ -433,6 +433,124 @@ button {
     font-size: 14px;
 }
 
+/* Admin: menü ve firma yönetimi */
+
+.admin-header-left {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+.admin-nav {
+    display: flex;
+    gap: 4px;
+}
+
+.admin-nav-link {
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+    .admin-nav-link:hover {
+        background: #f1f5f9;
+    }
+
+.admin-nav-link-active {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.admin-search {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+    .admin-search .field {
+        flex: 1;
+    }
+
+.admin-result-count {
+    margin: 0 0 10px;
+}
+
+.admin-business-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    transition: border-color 0.15s;
+}
+
+    .admin-business-row:hover {
+        border-color: #a5b4fc;
+    }
+
+    .admin-business-row h3 {
+        margin: 0;
+        font-size: 17px;
+    }
+
+.admin-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.admin-edit-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.admin-edit-side {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.admin-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid #f1f5f9;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.admin-owner {
+    margin: 0 0 12px;
+    font-weight: 600;
+}
+
+.admin-confirm-card {
+    border-color: #fecaca;
+    background: #fef2f2;
+}
+
+    .admin-confirm-card .admin-confirm-text {
+        margin: 0 0 12px;
+    }
+
+@media (max-width: 860px) {
+    .admin-edit-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-email {
+        display: none;
+    }
+}
+
 /* Hesap */
 
 .auth-switch {

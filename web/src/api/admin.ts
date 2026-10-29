@@ -4,8 +4,7 @@ import type {
     BusinessApplicationStatus,
 } from "../types/businessApplication";
 import { readProblemMessage } from "./problem";
-
-const API_BASE_URL = "http://localhost:5171";
+import { API_BASE_URL } from "./config";
 
 // Oturum yoksa veya süresi dolmuşsa fırlatılır; sayfa giriş ekranına yönlendirir.
 export class UnauthorizedError extends Error {
@@ -14,7 +13,7 @@ export class UnauthorizedError extends Error {
     }
 }
 
-async function adminFetch(
+export async function adminFetch(
     path: string,
     fallbackError: string,
     init: RequestInit = {}

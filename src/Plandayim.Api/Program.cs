@@ -23,6 +23,8 @@ using System.Threading.RateLimiting;
 using Microsoft.Extensions.FileProviders;
 using Plandayim.Application.Common;
 using Plandayim.Infrastructure.Storage;
+using Plandayim.Application.AdminBusinesses;
+using Plandayim.Infrastructure.AdminBusinesses;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -56,6 +58,7 @@ builder.Services.Configure<AdminOptions>(
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IOwnerBusinessService, OwnerBusinessService>();
+builder.Services.AddScoped<IAdminBusinessService, AdminBusinessService>();
 
 // Yüklenen görseller wwwroot/uploads altında saklanır ve /uploads adresinden
 // servis edilir. Sunucuda Storage:PublicBaseUrl gerçek alan adına ayarlanmalı.
@@ -135,8 +138,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
     {
+        // Yayında Cors:AllowedOrigins ayarı sitenin gerçek adresiyle verilmeli.
+        var allowedOrigins = builder.Configuration
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>() ?? ["http://localhost:5173"];
+
         policy
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();

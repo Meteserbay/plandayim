@@ -9,8 +9,7 @@ import type {
 } from "../types/owner";
 import { UnauthorizedError } from "./admin";
 import { readProblemMessage } from "./problem";
-
-const API_BASE_URL = "http://localhost:5171";
+import { API_BASE_URL } from "./config";
 
 // Firma sahibi oturumuyla yapılan istekler. 401 gelirse sayfa giriş
 // ekranına yönlendirir.

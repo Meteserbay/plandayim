@@ -3,6 +3,7 @@ using Plandayim.Application.BusinessApplications;
 using Plandayim.Application.Common;
 using Plandayim.Domain.BusinessApplications;
 using Plandayim.Domain.Businesses;
+using Plandayim.Infrastructure.Businesses;
 using Plandayim.Infrastructure.Common;
 using Plandayim.Infrastructure.Persistence;
 
@@ -162,11 +163,17 @@ public sealed class BusinessApplicationService
             return await GetDtoAsync(applicationId, cancellationToken);
         }
 
-        var input = await ValidateNewBusinessAsync(
-            request,
+        var input = await BusinessClassification.ValidateAsync(
+            _dbContext,
+            request.CityId,
+            request.DistrictId,
+            request.CategoryIds,
+            request.PrimaryCategoryId,
+            request.ServiceAreaDistrictIds,
             cancellationToken);
 
-        var slug = await GenerateUniqueSlugAsync(
+        var slug = await SlugGenerator.GenerateUniqueBusinessSlugAsync(
+            _dbContext,
             application.BusinessName,
             cancellationToken);
 
@@ -203,15 +210,7 @@ public sealed class BusinessApplicationService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        _dbContext.BusinessCategories.AddRange(
-            input.CategoryIds.Select(categoryId => new BusinessCategory(
-                business.Id,
-                categoryId,
-                categoryId == input.PrimaryCategoryId)));
-
-        _dbContext.BusinessServiceAreas.AddRange(
-            input.ServiceAreaDistrictIds.Select(districtId =>
-                new BusinessServiceArea(business.Id, districtId)));
+        await input.ApplyToAsync(_dbContext, business.Id, cancellationToken);
 
         application.Approve(business.Id);
 
@@ -252,115 +251,6 @@ public sealed class BusinessApplicationService
         }
 
         return application;
-    }
-
-    private async Task<NewBusinessInput> ValidateNewBusinessAsync(
-        ApproveBusinessApplicationRequest request,
-        CancellationToken cancellationToken)
-    {
-        if (!request.CityId.HasValue)
-        {
-            throw new RequestValidationException("Şehir seçmelisin.");
-        }
-
-        if (!request.DistrictId.HasValue)
-        {
-            throw new RequestValidationException("İlçe seçmelisin.");
-        }
-
-        var cityId = request.CityId.Value;
-        var districtId = request.DistrictId.Value;
-
-        var districtBelongsToCity = await _dbContext.Districts
-            .AsNoTracking()
-            .AnyAsync(
-                x => x.Id == districtId && x.CityId == cityId,
-                cancellationToken);
-
-        if (!districtBelongsToCity)
-        {
-            throw new RequestValidationException(
-                "Seçilen ilçe bu şehre ait değil.");
-        }
-
-        var categoryIds = request.CategoryIds.Distinct().ToList();
-
-        if (categoryIds.Count == 0)
-        {
-            throw new RequestValidationException(
-                "En az bir kategori seçmelisin.");
-        }
-
-        var existingCategoryCount = await _dbContext.Categories
-            .AsNoTracking()
-            .CountAsync(x => categoryIds.Contains(x.Id), cancellationToken);
-
-        if (existingCategoryCount != categoryIds.Count)
-        {
-            throw new RequestValidationException(
-                "Seçilen kategorilerden biri bulunamadı.");
-        }
-
-        var primaryCategoryId = request.PrimaryCategoryId ?? categoryIds[0];
-
-        if (!categoryIds.Contains(primaryCategoryId))
-        {
-            throw new RequestValidationException(
-                "Ana kategori seçilen kategorilerden biri olmalı.");
-        }
-
-        // Arama ilçeye göre hizmet bölgelerinden yapıldığı için firmanın
-        // kendi ilçesi her zaman hizmet bölgesine eklenir.
-        var serviceAreaDistrictIds = request.ServiceAreaDistrictIds
-            .Append(districtId)
-            .Distinct()
-            .ToList();
-
-        var existingDistrictCount = await _dbContext.Districts
-            .AsNoTracking()
-            .CountAsync(
-                x => serviceAreaDistrictIds.Contains(x.Id),
-                cancellationToken);
-
-        if (existingDistrictCount != serviceAreaDistrictIds.Count)
-        {
-            throw new RequestValidationException(
-                "Seçilen hizmet bölgelerinden biri bulunamadı.");
-        }
-
-        return new NewBusinessInput(
-            cityId,
-            districtId,
-            categoryIds,
-            primaryCategoryId,
-            serviceAreaDistrictIds);
-    }
-
-    private async Task<string> GenerateUniqueSlugAsync(
-        string businessName,
-        CancellationToken cancellationToken)
-    {
-        var baseSlug = SlugGenerator.Generate(businessName);
-
-        var existingSlugs = await _dbContext.Businesses
-            .AsNoTracking()
-            .Where(x => x.Slug == baseSlug || x.Slug.StartsWith(baseSlug + "-"))
-            .Select(x => x.Slug)
-            .ToListAsync(cancellationToken);
-
-        if (!existingSlugs.Contains(baseSlug))
-        {
-            return baseSlug;
-        }
-
-        var suffix = 2;
-
-        while (existingSlugs.Contains($"{baseSlug}-{suffix}"))
-        {
-            suffix++;
-        }
-
-        return $"{baseSlug}-{suffix}";
     }
 
     private async Task<BusinessApplicationDto> GetDtoAsync(
@@ -411,11 +301,4 @@ public sealed class BusinessApplicationService
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
-
-    private sealed record NewBusinessInput(
-        long CityId,
-        long DistrictId,
-        IReadOnlyList<long> CategoryIds,
-        long PrimaryCategoryId,
-        IReadOnlyList<long> ServiceAreaDistrictIds);
 }

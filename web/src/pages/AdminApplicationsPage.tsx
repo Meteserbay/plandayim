@@ -2,12 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import {
     UnauthorizedError,
-    adminLogout,
     approveBusinessApplication,
-    getAdminSession,
     getBusinessApplications,
     rejectBusinessApplication,
 } from "../api/admin";
+import AdminLayout from "../components/AdminLayout";
 import ApproveBusinessForm from "../components/ApproveBusinessForm";
 import {
     BusinessApplicationStatus,
@@ -43,7 +42,6 @@ function formatDate(value: string) {
 
 function AdminApplicationsPage() {
     const navigate = useNavigate();
-    const [adminEmail, setAdminEmail] = useState("");
     const [statusFilter, setStatusFilter] = useState<
         BusinessApplicationStatus | undefined
     >(BusinessApplicationStatus.Pending);
@@ -69,12 +67,6 @@ function AdminApplicationsPage() {
         },
         [navigate]
     );
-
-    useEffect(() => {
-        getAdminSession()
-            .then((session) => setAdminEmail(session.email))
-            .catch(handleError);
-    }, [handleError]);
 
     useEffect(() => {
         let isCancelled = false;
@@ -137,14 +129,6 @@ function AdminApplicationsPage() {
             handleError(caughtError);
         } finally {
             setBusyId(null);
-        }
-    }
-
-    async function handleLogout() {
-        try {
-            await adminLogout();
-        } finally {
-            navigate("/admin/giris", { replace: true });
         }
     }
 
@@ -249,156 +233,132 @@ function AdminApplicationsPage() {
     }
 
     return (
-        <div className="admin-page">
-            <header className="site-header">
-                <div className="header-inner">
-                    <Link to="/" className="brand">
-                        Plandayım <span className="admin-badge">Admin</span>
-                    </Link>
+        <AdminLayout>
+            <h1 className="section-title">İşletme başvuruları</h1>
 
-                    <div className="header-nav">
-                        {adminEmail && (
-                            <span className="header-link">{adminEmail}</span>
-                        )}
+            <div className="admin-tabs" role="tablist">
+                {statusFilters.map((filter) => (
+                    <button
+                        key={filter.label}
+                        type="button"
+                        role="tab"
+                        aria-selected={statusFilter === filter.value}
+                        className={
+                            statusFilter === filter.value
+                                ? "admin-tab admin-tab-active"
+                                : "admin-tab"
+                        }
+                        onClick={() => {
+                            setPendingAction(null);
+                            setApprovingId(null);
+                            setStatusFilter(filter.value);
+                        }}
+                    >
+                        {filter.label}
+                    </button>
+                ))}
+            </div>
 
-                        <button
-                            type="button"
-                            className="admin-button"
-                            onClick={handleLogout}
-                        >
-                            Çıkış
-                        </button>
-                    </div>
+            {error && (
+                <p className="form-error" role="alert">
+                    {error}
+                </p>
+            )}
+
+            {isLoading ? (
+                <p className="admin-muted">Yükleniyor...</p>
+            ) : applications.length === 0 ? (
+                <div className="empty-state">
+                    Bu listede başvuru yok.
                 </div>
-            </header>
-
-            <main className="admin-container">
-                <h1 className="section-title">İşletme başvuruları</h1>
-
-                <div className="admin-tabs" role="tablist">
-                    {statusFilters.map((filter) => (
-                        <button
-                            key={filter.label}
-                            type="button"
-                            role="tab"
-                            aria-selected={statusFilter === filter.value}
-                            className={
-                                statusFilter === filter.value
-                                    ? "admin-tab admin-tab-active"
-                                    : "admin-tab"
-                            }
-                            onClick={() => {
-                                setPendingAction(null);
-                                setApprovingId(null);
-                                setStatusFilter(filter.value);
-                            }}
+            ) : (
+                <div className="admin-list">
+                    {applications.map((application) => (
+                        <article
+                            className="detail-card admin-application"
+                            key={application.id}
                         >
-                            {filter.label}
-                        </button>
-                    ))}
-                </div>
+                            <div className="admin-application-header">
+                                <div>
+                                    <h3>
+                                        {application.businessSlug ? (
+                                            <Link
+                                                to={`/business/${application.businessSlug}`}
+                                                target="_blank"
+                                            >
+                                                {application.businessName} ↗
+                                            </Link>
+                                        ) : (
+                                            application.businessName
+                                        )}
+                                    </h3>
 
-                {error && (
-                    <p className="form-error" role="alert">
-                        {error}
-                    </p>
-                )}
-
-                {isLoading ? (
-                    <p className="admin-muted">Yükleniyor...</p>
-                ) : applications.length === 0 ? (
-                    <div className="empty-state">
-                        Bu listede başvuru yok.
-                    </div>
-                ) : (
-                    <div className="admin-list">
-                        {applications.map((application) => (
-                            <article
-                                className="detail-card admin-application"
-                                key={application.id}
-                            >
-                                <div className="admin-application-header">
-                                    <div>
-                                        <h3>
-                                            {application.businessSlug ? (
-                                                <Link
-                                                    to={`/business/${application.businessSlug}`}
-                                                    target="_blank"
-                                                >
-                                                    {application.businessName} ↗
-                                                </Link>
-                                            ) : (
-                                                application.businessName
-                                            )}
-                                        </h3>
-
-                                        <p className="admin-muted">
-                                            #{application.id} ·{" "}
-                                            {formatDate(application.createdAtUtc)}
-                                        </p>
-                                    </div>
-
-                                    <div className="tag-list">
-                                        <span className="tag">
-                                            {application.type ===
-                                            BusinessApplicationType.AddBusiness
-                                                ? "Firma ekleme"
-                                                : "Sahiplenme"}
-                                        </span>
-
-                                        <span
-                                            className={`tag admin-status-${application.status}`}
-                                        >
-                                            {statusLabels[application.status]}
-                                        </span>
-                                    </div>
+                                    <p className="admin-muted">
+                                        #{application.id} ·{" "}
+                                        {formatDate(application.createdAtUtc)}
+                                    </p>
                                 </div>
 
-                                <dl className="admin-details">
-                                    <dt>Başvuran</dt>
-                                    <dd>{application.contactName}</dd>
+                                <div className="tag-list">
+                                    <span className="tag">
+                                        {application.type ===
+                                        BusinessApplicationType.AddBusiness
+                                            ? "Firma ekleme"
+                                            : "Sahiplenme"}
+                                    </span>
 
-                                    <dt>Telefon</dt>
-                                    <dd>
-                                        <a href={`tel:${application.phoneNumber}`}>
-                                            {application.phoneNumber}
-                                        </a>
-                                    </dd>
+                                    <span
+                                        className={`tag admin-status-${application.status}`}
+                                    >
+                                        {statusLabels[application.status]}
+                                    </span>
+                                </div>
+                            </div>
 
-                                    <dt>E-posta</dt>
-                                    <dd>
-                                        <a href={`mailto:${application.email}`}>
-                                            {application.email}
-                                        </a>
-                                    </dd>
+                            <dl className="admin-details">
+                                <dt>Başvuran</dt>
+                                <dd>{application.contactName}</dd>
 
-                                    <dt>Hesap</dt>
-                                    <dd>
-                                        {application.applicantEmail ?? (
-                                            <span className="admin-muted">
-                                                Hesapsız başvuru (onaylanırsa
-                                                firmaya sahip atanmaz)
-                                            </span>
-                                        )}
-                                    </dd>
+                                <dt>Telefon</dt>
+                                <dd>
+                                    <a href={`tel:${application.phoneNumber}`}>
+                                        {application.phoneNumber}
+                                    </a>
+                                </dd>
 
-                                    {application.message && (
-                                        <>
-                                            <dt>Mesaj</dt>
-                                            <dd className="admin-message">
-                                                {application.message}
-                                            </dd>
-                                        </>
+                                <dt>E-posta</dt>
+                                <dd>
+                                    <a href={`mailto:${application.email}`}>
+                                        {application.email}
+                                    </a>
+                                </dd>
+
+                                <dt>Hesap</dt>
+                                <dd>
+                                    {application.applicantEmail ?? (
+                                        <span className="admin-muted">
+                                            Hesapsız başvuru (onaylanırsa
+                                            firmaya sahip atanmaz)
+                                        </span>
                                     )}
-                                </dl>
+                                </dd>
 
-                                {renderActions(application)}
-                            </article>
-                        ))}
-                    </div>
-                )}
-            </main>
-        </div>
+                                {application.message && (
+                                    <>
+                                        <dt>Mesaj</dt>
+                                        <dd className="admin-message">
+                                            {application.message}
+                                        </dd>
+                                    </>
+                                )}
+                            </dl>
+
+                            {renderActions(application)}
+                        </article>
+                    ))}
+                </div>
+            )}
+        </AdminLayout>
     );
 }
 
