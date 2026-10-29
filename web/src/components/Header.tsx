@@ -1,6 +1,9 @@
 ﻿import { Link } from "react-router";
+import { useAccount } from "../account/AccountContext";
 
 function Header() {
+    const { account } = useAccount();
+
     return (
         <header className="site-header">
             <div className="header-inner">
@@ -17,9 +20,24 @@ function Header() {
                         Nasıl Çalışır?
                     </a>
 
-                    <Link to="/firmalar-icin" className="header-business-link">
-                        Firmalar İçin
-                    </Link>
+                    {account ? (
+                        <Link to="/panel" className="header-business-link">
+                            Panelim
+                        </Link>
+                    ) : (
+                        <>
+                            <Link to="/hesap/giris" className="header-link">
+                                Giriş Yap
+                            </Link>
+
+                            <Link
+                                to="/firmalar-icin"
+                                className="header-business-link"
+                            >
+                                Firmalar İçin
+                            </Link>
+                        </>
+                    )}
                 </nav>
             </div>
         </header>

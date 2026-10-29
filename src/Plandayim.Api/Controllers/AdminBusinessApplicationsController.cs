@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Plandayim.Api.Auth;
 using Plandayim.Application.BusinessApplications;
 using Plandayim.Domain.BusinessApplications;
 
 namespace Plandayim.Api.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = AuthPolicies.Admin)]
 [Route("api/admin/business-applications")]
 public sealed class AdminBusinessApplicationsController : ControllerBase
 {

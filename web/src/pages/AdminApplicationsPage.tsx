@@ -372,6 +372,16 @@ function AdminApplicationsPage() {
                                         </a>
                                     </dd>
 
+                                    <dt>Hesap</dt>
+                                    <dd>
+                                        {application.applicantEmail ?? (
+                                            <span className="admin-muted">
+                                                Hesapsız başvuru (onaylanırsa
+                                                firmaya sahip atanmaz)
+                                            </span>
+                                        )}
+                                    </dd>
+
                                     {application.message && (
                                         <>
                                             <dt>Mesaj</dt>

@@ -2,12 +2,12 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Plandayim.Api.Admin;
+using Plandayim.Api.Auth;
 
 namespace Plandayim.Api.Controllers;
 
@@ -15,8 +15,6 @@ namespace Plandayim.Api.Controllers;
 [Route("api/admin/auth")]
 public sealed class AdminAuthController : ControllerBase
 {
-    public const string LoginRateLimitPolicy = "admin-login";
-
     private readonly AdminOptions _options;
     private readonly ILogger<AdminAuthController> _logger;
 
@@ -29,7 +27,7 @@ public sealed class AdminAuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    [EnableRateLimiting(LoginRateLimitPolicy)]
+    [EnableRateLimiting(RateLimitPolicies.AdminLogin)]
     public async Task<IActionResult> Login(
         [FromBody] AdminLoginRequest request)
     {
@@ -65,10 +63,10 @@ public sealed class AdminAuthController : ControllerBase
                 new Claim(ClaimTypes.Name, _options.Email!),
                 new Claim(ClaimTypes.Role, "Admin")
             ],
-            CookieAuthenticationDefaults.AuthenticationScheme);
+            AuthSchemes.Admin);
 
         await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
+            AuthSchemes.Admin,
             new ClaimsPrincipal(identity));
 
         return Ok(new { email = _options.Email });
@@ -77,13 +75,12 @@ public sealed class AdminAuthController : ControllerBase
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
-        await HttpContext.SignOutAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignOutAsync(AuthSchemes.Admin);
 
         return NoContent();
     }
 
-    [Authorize]
+    [Authorize(Policy = AuthPolicies.Admin)]
     [HttpGet("me")]
     public IActionResult Me()
     {

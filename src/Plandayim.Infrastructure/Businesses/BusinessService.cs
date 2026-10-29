@@ -16,17 +16,19 @@ public sealed class BusinessService : IBusinessService
     public async Task RecordInteractionAsync(
     long businessId,
     BusinessInteractionType type,
+    long? viewerUserId,
     CancellationToken cancellationToken = default)
     {
-        var businessExists = await _dbContext.Businesses
+        var business = await _dbContext.Businesses
             .AsNoTracking()
-            .AnyAsync(
-                x => x.Id == businessId && x.IsActive,
-                cancellationToken);
+            .Where(x => x.Id == businessId && x.IsActive)
+            .Select(x => new { x.OwnerUserId })
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new KeyNotFoundException("Business not found.");
 
-        if (!businessExists)
+        if (viewerUserId.HasValue && business.OwnerUserId == viewerUserId)
         {
-            throw new KeyNotFoundException("Business not found.");
+            return;
         }
 
         var interaction = new BusinessInteraction(

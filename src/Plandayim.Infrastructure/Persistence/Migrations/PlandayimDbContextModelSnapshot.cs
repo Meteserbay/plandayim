@@ -30,6 +30,9 @@ namespace Plandayim.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<long?>("ApplicantUserId")
+                        .HasColumnType("bigint");
+
                     b.Property<long?>("BusinessId")
                         .HasColumnType("bigint");
 
@@ -70,6 +73,8 @@ namespace Plandayim.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicantUserId");
 
                     b.HasIndex("BusinessId");
 
@@ -132,6 +137,9 @@ namespace Plandayim.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<long?>("OwnerUserId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -160,6 +168,8 @@ namespace Plandayim.Infrastructure.Persistence.Migrations
                     b.HasIndex("DistrictId");
 
                     b.HasIndex("IsActive");
+
+                    b.HasIndex("OwnerUserId");
 
                     b.HasIndex("Slug")
                         .IsUnique();
@@ -415,8 +425,53 @@ namespace Plandayim.Infrastructure.Persistence.Migrations
                     b.ToTable("Districts", (string)null);
                 });
 
+            modelBuilder.Entity("Plandayim.Domain.Users.User", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<DateTime?>("LastLoginAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Users", (string)null);
+                });
+
             modelBuilder.Entity("Plandayim.Domain.BusinessApplications.BusinessApplication", b =>
                 {
+                    b.HasOne("Plandayim.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("ApplicantUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Plandayim.Domain.Businesses.Business", null)
                         .WithMany()
                         .HasForeignKey("BusinessId")
@@ -436,6 +491,11 @@ namespace Plandayim.Infrastructure.Persistence.Migrations
                         .HasForeignKey("DistrictId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Plandayim.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Plandayim.Domain.Businesses.BusinessCampaign", b =>

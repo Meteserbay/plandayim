@@ -4,6 +4,8 @@ import BusinessDetailPage from "./pages/BusinessDetailPage";
 import BusinessApplicationPage from "./pages/BusinessApplicationPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminApplicationsPage from "./pages/AdminApplicationsPage";
+import AccountAuthPage from "./pages/AccountAuthPage";
+import OwnerPanelPage from "./pages/OwnerPanelPage";
 
 function App() {
     return (
@@ -19,6 +21,15 @@ function App() {
             />
             <Route path="/admin/giris" element={<AdminLoginPage />} />
             <Route path="/admin" element={<AdminApplicationsPage />} />
+            <Route
+                path="/hesap/giris"
+                element={<AccountAuthPage key="login" mode="login" />}
+            />
+            <Route
+                path="/hesap/kayit"
+                element={<AccountAuthPage key="register" mode="register" />}
+            />
+            <Route path="/panel" element={<OwnerPanelPage />} />
         </Routes>
     );
 }

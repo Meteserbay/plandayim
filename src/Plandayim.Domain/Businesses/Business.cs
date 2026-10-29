@@ -62,7 +62,23 @@ public class Business : BaseEntity
 
     public bool IsActive { get; private set; }
 
+    public long? OwnerUserId { get; private set; }
+
     // Domain Methods
+
+    public void AssignOwner(long userId)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(userId);
+
+        if (OwnerUserId.HasValue && OwnerUserId != userId)
+        {
+            throw new InvalidOperationException(
+                "Business already has a different owner.");
+        }
+
+        OwnerUserId = userId;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
 
     public void UpdateDetails(
     string name,

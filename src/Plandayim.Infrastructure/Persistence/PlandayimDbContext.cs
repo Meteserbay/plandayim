@@ -3,6 +3,7 @@ using Plandayim.Domain.BusinessApplications;
 using Plandayim.Domain.Businesses;
 using Plandayim.Domain.Categories;
 using Plandayim.Domain.Locations;
+using Plandayim.Domain.Users;
 
 namespace Plandayim.Infrastructure.Persistence;
 
@@ -29,6 +30,8 @@ public class PlandayimDbContext : DbContext
     public DbSet<City> Cities => Set<City>();
 
     public DbSet<District> Districts => Set<District>();
+
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

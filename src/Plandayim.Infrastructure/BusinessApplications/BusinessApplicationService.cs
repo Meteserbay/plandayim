@@ -22,6 +22,7 @@ public sealed class BusinessApplicationService
 
     public async Task<long> CreateAsync(
         CreateBusinessApplicationRequest request,
+        long applicantUserId,
         CancellationToken cancellationToken = default)
     {
         if (request.Type == BusinessApplicationType.ClaimBusiness)
@@ -32,16 +33,41 @@ public sealed class BusinessApplicationService
                     "Claim business applications require a BusinessId.");
             }
 
-            var businessExists = await _dbContext.Businesses
+            var business = await _dbContext.Businesses
                 .AsNoTracking()
-                .AnyAsync(
-                    x => x.Id == request.BusinessId && x.IsActive,
-                    cancellationToken);
+                .Where(x => x.Id == request.BusinessId && x.IsActive)
+                .Select(x => new { x.OwnerUserId })
+                .FirstOrDefaultAsync(cancellationToken)
+                ?? throw new KeyNotFoundException("Business not found.");
 
-            if (!businessExists)
+            if (business.OwnerUserId == applicantUserId)
             {
-                throw new KeyNotFoundException("Business not found.");
+                throw new RequestValidationException(
+                    "Bu işletme zaten senin hesabına bağlı.");
             }
+
+            if (business.OwnerUserId.HasValue)
+            {
+                throw new RequestValidationException(
+                    "Bu işletmenin zaten doğrulanmış bir sahibi var. Bir hata olduğunu düşünüyorsan bizimle iletişime geç.");
+            }
+        }
+
+        var hasPendingDuplicate = await _dbContext.BusinessApplications
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.ApplicantUserId == applicantUserId &&
+                     x.Status == BusinessApplicationStatus.Pending &&
+                     x.Type == request.Type &&
+                     (request.Type == BusinessApplicationType.ClaimBusiness
+                         ? x.BusinessId == request.BusinessId
+                         : x.BusinessName == request.BusinessName.Trim()),
+                cancellationToken);
+
+        if (hasPendingDuplicate)
+        {
+            throw new RequestValidationException(
+                "Bu işletme için zaten bekleyen bir başvurun var.");
         }
 
         var businessId = request.Type == BusinessApplicationType.ClaimBusiness
@@ -57,13 +83,28 @@ public sealed class BusinessApplicationService
             businessId,
             string.IsNullOrWhiteSpace(request.Message)
                 ? null
-                : request.Message.Trim());
+                : request.Message.Trim(),
+            applicantUserId);
 
         _dbContext.BusinessApplications.Add(application);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return application.Id;
+    }
+
+    public async Task<IReadOnlyList<BusinessApplicationDto>> ListForApplicantAsync(
+        long applicantUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var applications = _dbContext.BusinessApplications
+            .AsNoTracking()
+            .Where(x => x.ApplicantUserId == applicantUserId)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .Take(MaxListCount);
+
+        return await ProjectToDto(applications)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<BusinessApplicationDto>> ListAsync(
@@ -96,6 +137,24 @@ public sealed class BusinessApplicationService
 
         if (application.Type == BusinessApplicationType.ClaimBusiness)
         {
+            var claimedBusiness = await _dbContext.Businesses
+                .FirstOrDefaultAsync(
+                    x => x.Id == application.BusinessId,
+                    cancellationToken)
+                ?? throw new KeyNotFoundException("Business not found.");
+
+            if (application.ApplicantUserId.HasValue)
+            {
+                if (claimedBusiness.OwnerUserId.HasValue &&
+                    claimedBusiness.OwnerUserId != application.ApplicantUserId)
+                {
+                    throw new RequestValidationException(
+                        "Bu işletmenin zaten başka bir sahibi var. Önce o sahipliği kaldırmak gerekir.");
+                }
+
+                claimedBusiness.AssignOwner(application.ApplicantUserId.Value);
+            }
+
             application.Approve();
 
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -122,6 +181,11 @@ public sealed class BusinessApplicationService
             application.PhoneNumber,
             input.CityId,
             input.DistrictId);
+
+        if (application.ApplicantUserId.HasValue)
+        {
+            business.AssignOwner(application.ApplicantUserId.Value);
+        }
 
         business.UpdateDetails(
             application.BusinessName,
@@ -322,6 +386,10 @@ public sealed class BusinessApplicationService
                 on application.BusinessId equals (long?)business.Id
                 into businesses
             from business in businesses.DefaultIfEmpty()
+            join applicant in _dbContext.Users.AsNoTracking()
+                on application.ApplicantUserId equals (long?)applicant.Id
+                into applicants
+            from applicant in applicants.DefaultIfEmpty()
             select new BusinessApplicationDto(
                 application.Id,
                 application.Type,
@@ -333,6 +401,8 @@ public sealed class BusinessApplicationService
                 application.PhoneNumber,
                 application.Email,
                 application.Message,
+                application.ApplicantUserId,
+                applicant != null ? applicant.Email : null,
                 application.CreatedAtUtc,
                 application.UpdatedAtUtc);
     }

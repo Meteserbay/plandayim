@@ -1,12 +1,15 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { useState, type FormEvent } from "react";
-import { Link, useSearchParams } from "react-router";
+import { useEffect, useState, type FormEvent } from "react";
+import { Link, useLocation, useSearchParams } from "react-router";
+import { useAccount } from "../account/AccountContext";
 import { createBusinessApplication } from "../api/businessApplications";
 import { BusinessApplicationType } from "../types/businessApplication";
 
 function BusinessApplicationPage() {
     const [searchParams] = useSearchParams();
+    const location = useLocation();
+    const { account, isLoading: isAccountLoading } = useAccount();
 
     // Firma profilindeki "Bu işletme senin mi?" linkinden gelinirse
     // başvuru sahiplenme başvurusu olarak açılır.
@@ -22,6 +25,20 @@ function BusinessApplicationPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState("");
+
+    // Hesap bilgileri yüklenince ad ve e-posta boşsa otomatik doldurulur.
+    useEffect(() => {
+        if (!account) {
+            return;
+        }
+
+        setContactName((current) => current || account.fullName);
+        setEmail((current) => current || account.email);
+    }, [account]);
+
+    const returnQuery = encodeURIComponent(
+        `${location.pathname}${location.search}`
+    );
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -75,17 +92,48 @@ function BusinessApplicationPage() {
             </section>
 
             <main className="application-container">
-                {isSubmitted ? (
+                {isAccountLoading ? (
+                    <section className="detail-card application-success">
+                        <p>Yükleniyor...</p>
+                    </section>
+                ) : !account ? (
+                    <section className="detail-card application-success">
+                        <h2>Önce hesabına giriş yap</h2>
+
+                        <p>
+                            Başvurun onaylandığında işletmen hesabına
+                            bağlanır ve işletme panelinden istatistiklerini
+                            görüp profilini yönetebilirsin.
+                        </p>
+
+                        <div className="action-row auth-actions">
+                            <Link
+                                to={`/hesap/kayit?donus=${returnQuery}`}
+                                className="primary-action"
+                            >
+                                Hesap Oluştur
+                            </Link>
+
+                            <Link
+                                to={`/hesap/giris?donus=${returnQuery}`}
+                                className="secondary-action"
+                            >
+                                Giriş Yap
+                            </Link>
+                        </div>
+                    </section>
+                ) : isSubmitted ? (
                     <section className="detail-card application-success">
                         <h2>Başvurun alındı ✓</h2>
 
                         <p>
                             Teşekkürler! Başvurunu inceleyip en kısa sürede
-                            seninle iletişime geçeceğiz.
+                            seninle iletişime geçeceğiz. Onaylandığında
+                            işletmen panelinde görünecek.
                         </p>
 
-                        <Link to="/" className="primary-action">
-                            Ana sayfaya dön
+                        <Link to="/panel" className="primary-action">
+                            Paneline git
                         </Link>
                     </section>
                 ) : (
