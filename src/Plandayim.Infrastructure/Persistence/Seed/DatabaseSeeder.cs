@@ -5,11 +5,17 @@ namespace Plandayim.Infrastructure.Persistence.Seed;
 
 public static class DatabaseSeeder
 {
-    public static void Seed(DbContext context)
+    // Örnek firmalar (sahte telefon numaralı) sadece geliştirme ortamında
+    // eklenir; canlı veritabanına yalnızca kategoriler ve il/ilçeler girer.
+    public static void Seed(DbContext context, bool includeSampleBusinesses)
     {
         SeedCategories(context);
         LocationSeeder.Seed(context);
-        BusinessSeeder.Seed(context);
+
+        if (includeSampleBusinesses)
+        {
+            BusinessSeeder.Seed(context);
+        }
     }
 
     public static async Task SeedAsync(

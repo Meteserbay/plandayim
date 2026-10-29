@@ -23,10 +23,20 @@ dotnet user-secrets set "Admin:Password" "guclu-bir-sifre" --project src/Planday
 Sunucuda `Admin__Email` ve `Admin__Password` ortam değişkenlerini kullan.
 Giriş denemeleri IP başına dakikada 5 ile sınırlıdır.
 
+## Yayına alma
+
+Site kendi bilgisayarında Windows servisi + Cloudflare Tunnel ile yayınlanır.
+Adım adım rehber: [docs/yayin.md](docs/yayin.md). Kısaca:
+
+- İlk kurulum: `deploy\kurulum.ps1` (yönetici PowerShell)
+- Güncelleme: `deploy\guncelle.ps1`
+- Yedek: her gece otomatik, `deploy\yedekle.ps1`
+
 ## Ortam ayarları
 
 Yerel geliştirmede hiçbirini ayarlamak gerekmez; varsayılanlar `localhost`
-adreslerini kullanır. Yayına alırken:
+adreslerini kullanır. Yayında `kurulum.ps1` bunları
+`C:\plandayim\config\appsettings.local.json` dosyasına yazar:
 
 | Ayar | Nerede | Açıklama |
 |---|---|---|
