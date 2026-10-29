@@ -80,6 +80,12 @@ public class Business : BaseEntity
         UpdatedAtUtc = DateTime.UtcNow;
     }
 
+    public void RemoveOwner()
+    {
+        OwnerUserId = null;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
     public void UpdateDetails(
     string name,
     string slug,
@@ -134,6 +140,12 @@ public class Business : BaseEntity
     public void Verify()
     {
         IsVerified = true;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void Unverify()
+    {
+        IsVerified = false;
         UpdatedAtUtc = DateTime.UtcNow;
     }
 

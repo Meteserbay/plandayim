@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Plandayim.Application.Common;
 using Plandayim.Application.OwnerBusinesses;
 using Plandayim.Domain.Businesses;
+using Plandayim.Infrastructure.Common;
 using Plandayim.Infrastructure.Persistence;
 using Plandayim.Infrastructure.Storage;
 
@@ -160,7 +161,7 @@ public sealed class OwnerBusinessService : IOwnerBusinessService
             request.PhoneNumber.Trim(),
             NullIfEmpty(request.WhatsAppNumber),
             NullIfEmpty(request.Email),
-            NormalizeWebsiteUrl(request.WebsiteUrl));
+            WebsiteUrl.Normalize(request.WebsiteUrl));
 
         business.UpdateLocation(
             business.CityId,
@@ -667,33 +668,6 @@ public sealed class OwnerBusinessService : IOwnerBusinessService
                 : null,
             campaign.IsActive,
             visibility);
-    }
-
-    // Profilde link olarak gösterildiği için sadece http/https kabul edilir;
-    // "javascript:" gibi adresler ziyaretçinin tarayıcısında kod çalıştırabilir.
-    private static string? NormalizeWebsiteUrl(string? value)
-    {
-        var trimmed = NullIfEmpty(value);
-
-        if (trimmed is null)
-        {
-            return null;
-        }
-
-        if (!trimmed.Contains("://", StringComparison.Ordinal))
-        {
-            trimmed = $"https://{trimmed}";
-        }
-
-        if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var uri) ||
-            (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps) ||
-            !uri.Host.Contains('.'))
-        {
-            throw new RequestValidationException(
-                "Geçerli bir web sitesi adresi girin (örn. https://ornek.com).");
-        }
-
-        return uri.ToString();
     }
 
     private static string? NullIfEmpty(string? value)

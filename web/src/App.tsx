@@ -4,6 +4,8 @@ import BusinessDetailPage from "./pages/BusinessDetailPage";
 import BusinessApplicationPage from "./pages/BusinessApplicationPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminApplicationsPage from "./pages/AdminApplicationsPage";
+import AdminBusinessesPage from "./pages/AdminBusinessesPage";
+import AdminBusinessEditPage from "./pages/AdminBusinessEditPage";
 import AccountAuthPage from "./pages/AccountAuthPage";
 import OwnerPanelPage from "./pages/OwnerPanelPage";
 
@@ -21,6 +23,11 @@ function App() {
             />
             <Route path="/admin/giris" element={<AdminLoginPage />} />
             <Route path="/admin" element={<AdminApplicationsPage />} />
+            <Route path="/admin/firmalar" element={<AdminBusinessesPage />} />
+            <Route
+                path="/admin/firmalar/:id"
+                element={<AdminBusinessEditPage />}
+            />
             <Route
                 path="/hesap/giris"
                 element={<AccountAuthPage key="login" mode="login" />}

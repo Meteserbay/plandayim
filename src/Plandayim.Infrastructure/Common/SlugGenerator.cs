@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
+using Plandayim.Infrastructure.Persistence;
 
 namespace Plandayim.Infrastructure.Common;
 
@@ -43,5 +45,37 @@ public static class SlugGenerator
         var slug = builder.ToString().TrimEnd('-');
 
         return slug.Length == 0 ? "isletme" : slug;
+    }
+
+    /// <summary>
+    /// Firma adından, mevcut firmalarla çakışmayan bir slug üretir
+    /// ("dugun-soleni", "dugun-soleni-2", ...).
+    /// </summary>
+    public static async Task<string> GenerateUniqueBusinessSlugAsync(
+        PlandayimDbContext dbContext,
+        string businessName,
+        CancellationToken cancellationToken)
+    {
+        var baseSlug = Generate(businessName);
+
+        var existingSlugs = await dbContext.Businesses
+            .AsNoTracking()
+            .Where(x => x.Slug == baseSlug || x.Slug.StartsWith(baseSlug + "-"))
+            .Select(x => x.Slug)
+            .ToListAsync(cancellationToken);
+
+        if (!existingSlugs.Contains(baseSlug))
+        {
+            return baseSlug;
+        }
+
+        var suffix = 2;
+
+        while (existingSlugs.Contains($"{baseSlug}-{suffix}"))
+        {
+            suffix++;
+        }
+
+        return $"{baseSlug}-{suffix}";
     }
 }
