@@ -24,7 +24,9 @@ function Footer() {
 
                     <div>
                         <strong>İşletmeler</strong>
-                        <a href="/#businesses">Firmalar İçin</a>
+                        <Link to="/firmalar-icin">İşletmeni Ekle</Link>
+                        <Link to="/hesap/giris">Firma Girişi</Link>
+                        <Link to="/hesap/kayit">Hesap Oluştur</Link>
                     </div>
                 </div>
             </div>

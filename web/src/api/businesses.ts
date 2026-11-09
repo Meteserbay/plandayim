@@ -27,12 +27,25 @@ export async function recordBusinessInteraction(
     }
 }
 
-export async function searchBusinesses(
-    categoryId: number,
-    districtId: number
-): Promise<BusinessListItem[]> {
+export async function searchBusinesses(filters: {
+    categoryId: number;
+    cityId?: number;
+    districtId?: number;
+}): Promise<BusinessListItem[]> {
+    const params = new URLSearchParams({
+        categoryId: String(filters.categoryId),
+    });
+
+    // İlçe seçildiyse yalnızca ilçeye göre aranır; şehir filtresi firmanın
+    // kendi şehrine de baktığı için başka şehirden hizmet verenleri eleyebilir.
+    if (filters.districtId) {
+        params.set("districtId", String(filters.districtId));
+    } else if (filters.cityId) {
+        params.set("cityId", String(filters.cityId));
+    }
+
     const response = await fetch(
-        `${API_BASE_URL}/api/businesses?categoryId=${categoryId}&districtId=${districtId}`
+        `${API_BASE_URL}/api/businesses?${params}`
     );
 
     if (!response.ok) {

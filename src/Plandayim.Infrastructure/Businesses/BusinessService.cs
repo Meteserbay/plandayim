@@ -165,7 +165,16 @@ public sealed class BusinessService : IBusinessService
 
         if (request.CityId.HasValue)
         {
-            query = query.Where(x => x.CityId == request.CityId.Value);
+            // Şehirde bulunan ya da o şehrin herhangi bir ilçesine hizmet veren
+            // firmalar listelenir.
+            var cityId = request.CityId.Value;
+            query = query.Where(business =>
+                business.CityId == cityId ||
+                _dbContext.BusinessServiceAreas.Any(area =>
+                    area.BusinessId == business.Id &&
+                    _dbContext.Districts.Any(district =>
+                        district.Id == area.DistrictId &&
+                        district.CityId == cityId)));
         }
 
         if (request.CategoryId.HasValue)

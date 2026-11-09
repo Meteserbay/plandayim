@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin
+Disallow: /panel
+Disallow: /hesap/
+Disallow: /api/
+
+Sitemap: https://plandayim.com.tr/sitemap.xml

@@ -1,10 +1,12 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, useNavigate } from "react-router";
 import { UnauthorizedError, adminLogout, getAdminSession } from "../api/admin";
+import { usePageMeta } from "../seo";
 
 // Admin sayfalarının ortak başlığı ve menüsü. Oturum yoksa giriş
 // sayfasına yönlendirir.
 function AdminLayout({ children }: { children: ReactNode }) {
+    usePageMeta({ title: "Admin", noIndex: true });
     const navigate = useNavigate();
     const [adminEmail, setAdminEmail] = useState("");
 

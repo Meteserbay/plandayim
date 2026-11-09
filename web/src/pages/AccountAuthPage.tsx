@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { login, register } from "../api/account";
 import { safeReturnPath, useAccount } from "../account/AccountContext";
+import { usePageMeta } from "../seo";
 
 interface AccountAuthPageProps {
     mode: "login" | "register";
@@ -14,6 +15,11 @@ function AccountAuthPage({ mode }: AccountAuthPageProps) {
 
     const returnPath = safeReturnPath(searchParams.get("donus"));
     const isRegister = mode === "register";
+
+    usePageMeta({
+        title: isRegister ? "Kayıt ol" : "Giriş yap",
+        noIndex: true,
+    });
 
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");

@@ -5,6 +5,7 @@ import { Link, useLocation, useSearchParams } from "react-router";
 import { useAccount } from "../account/AccountContext";
 import { createBusinessApplication } from "../api/businessApplications";
 import { BusinessApplicationType } from "../types/businessApplication";
+import { usePageMeta } from "../seo";
 
 function BusinessApplicationPage() {
     const [searchParams] = useSearchParams();
@@ -16,6 +17,13 @@ function BusinessApplicationPage() {
     const claimBusinessId = Number(searchParams.get("isletme")) || null;
     const claimBusinessName = searchParams.get("ad") ?? "";
     const isClaim = claimBusinessId !== null;
+
+    usePageMeta({
+        title: isClaim ? "İşletmeni sahiplen" : "İşletmeni ekle",
+        description:
+            "İşletmeni Plandayım'a ücretsiz ekle, organizasyon hizmeti " +
+            "arayan müşterilerin seni bulsun.",
+    });
 
     const [businessName, setBusinessName] = useState(claimBusinessName);
     const [contactName, setContactName] = useState("");

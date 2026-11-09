@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
 import { adminLogin } from "../api/admin";
+import { usePageMeta } from "../seo";
 
 function AdminLoginPage() {
+    usePageMeta({ title: "Admin girişi", noIndex: true });
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");

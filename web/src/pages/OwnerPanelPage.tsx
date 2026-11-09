@@ -9,6 +9,7 @@ import ImagesTab from "../components/owner/ImagesTab";
 import { useAccount } from "../account/AccountContext";
 import { UnauthorizedError } from "../api/admin";
 import { getMyApplications } from "../api/owner";
+import { usePageMeta } from "../seo";
 import {
     BusinessApplicationStatus,
     BusinessApplicationType,
@@ -31,6 +32,7 @@ const statusLabels: Record<BusinessApplicationStatus, string> = {
 };
 
 function OwnerPanelPage() {
+    usePageMeta({ title: "Panelim", noIndex: true });
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const { account, isLoading, logout, setAccount } = useAccount();

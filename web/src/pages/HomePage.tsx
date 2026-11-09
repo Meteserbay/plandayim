@@ -5,11 +5,14 @@ import { useEffect, useRef, useState } from "react";
 import { getCategories } from "../api/categories";
 import { getCities, getDistricts } from "../api/locations";
 import { searchBusinesses } from "../api/businesses";
+import { usePageMeta } from "../seo";
 
 import type { Category } from "../types/category";
 import type { City, District } from "../types/location";
 import type { BusinessListItem } from "../types/business";
 function HomePage() {
+    usePageMeta({});
+
     const [categories, setCategories] = useState<Category[]>([]);
     const [cities, setCities] = useState<City[]>([]);
     const [districts, setDistricts] = useState<District[]>([]);
@@ -45,17 +48,20 @@ function HomePage() {
         setSelectedDistrictId("");
     }, [selectedCityId]);
     async function handleSearch() {
-        if (!selectedCategoryId || !selectedDistrictId) {
+        if (!selectedCategoryId || !selectedCityId) {
             return;
         }
 
         try {
             setIsLoading(true);
 
-            const result = await searchBusinesses(
-                Number(selectedCategoryId),
-                Number(selectedDistrictId)
-            );
+            const result = await searchBusinesses({
+                categoryId: Number(selectedCategoryId),
+                cityId: Number(selectedCityId),
+                districtId: selectedDistrictId
+                    ? Number(selectedDistrictId)
+                    : undefined,
+            });
 
             setBusinesses(result);
             setHasSearched(true);
@@ -141,7 +147,7 @@ function HomePage() {
                             }
                             disabled={!selectedCityId}
                         >
-                            <option value="">İlçe seç</option>
+                            <option value="">Tüm ilçeler</option>
 
                             {districts.map((district) => (
                                 <option key={district.id} value={district.id}>
@@ -157,7 +163,7 @@ function HomePage() {
                         onClick={handleSearch}
                         disabled={
                             !selectedCategoryId ||
-                            !selectedDistrictId ||
+                            !selectedCityId ||
                             isLoading
                         }
                     >
@@ -175,7 +181,8 @@ function HomePage() {
 
                 {businesses.length === 0 ? (
                     <div className="empty-state">
-                        Arama kriterlerini seçerek sana uygun firmaları bulabilirsin.
+                        Bu bölgede bu hizmet için henüz kayıtlı firma yok.
+                        Farklı bir ilçe ya da kategori deneyebilirsin.
                     </div>
                 ) : (
                     <div className="business-grid">

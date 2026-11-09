@@ -7,6 +7,7 @@ import {
     recordBusinessInteraction
 } from "../api/businesses";
 import type { BusinessDetail } from "../types/business";
+import { usePageMeta } from "../seo";
 
 // Aynı oturumda sayfa yenilense bile profil görüntülenmesi bir kez sayılır.
 // true dönerse bu ziyaret kaydedilmelidir.
@@ -26,12 +27,38 @@ function markProfileViewed(businessId: number): boolean {
     return true;
 }
 
+// Arama sonuçlarında görünecek kısa açıklama (en fazla ~160 karakter).
+function describeBusiness(business: BusinessDetail): string {
+    const location = `${business.districtName}, ${business.cityName}`;
+    const categories = business.categories.join(", ");
+    const intro = categories
+        ? `${business.name}: ${location} bölgesinde ${categories}.`
+        : `${business.name}, ${location}.`;
+    const text = business.description
+        ? `${intro} ${business.description}`
+        : `${intro} İletişim bilgileri, görseller ve kampanyalar Plandayım'da.`;
+
+    return text.length > 160 ? `${text.slice(0, 157).trimEnd()}...` : text;
+}
+
 function BusinessDetailPage() {
     const { slug } = useParams();
     const [copiedCampaignCode, setCopiedCampaignCode] = useState<string | null>(null);
     const [business, setBusiness] = useState<BusinessDetail | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
+
+    usePageMeta({
+        title: business
+            ? `${business.name} – ${business.districtName}, ${business.cityName}`
+            : error
+              ? "İşletme bulunamadı"
+              : undefined,
+        description: business
+            ? describeBusiness(business)
+            : undefined,
+        noIndex: Boolean(error),
+    });
 
     useEffect(() => {
         if (!slug) {

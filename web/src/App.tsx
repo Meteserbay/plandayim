@@ -8,6 +8,7 @@ import AdminBusinessesPage from "./pages/AdminBusinessesPage";
 import AdminBusinessEditPage from "./pages/AdminBusinessEditPage";
 import AccountAuthPage from "./pages/AccountAuthPage";
 import OwnerPanelPage from "./pages/OwnerPanelPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
     return (
@@ -37,6 +38,7 @@ function App() {
                 element={<AccountAuthPage key="register" mode="register" />}
             />
             <Route path="/panel" element={<OwnerPanelPage />} />
+            <Route path="*" element={<NotFoundPage />} />
         </Routes>
     );
 }
