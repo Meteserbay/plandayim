@@ -47,6 +47,18 @@ public sealed class BusinessesController : ControllerBase
         return Ok(businesses);
     }
 
+    [HttpGet("latest")]
+    public async Task<ActionResult<IReadOnlyList<BusinessListItemDto>>> GetLatest(
+        [FromQuery] int count = 6,
+        CancellationToken cancellationToken = default)
+    {
+        var businesses = await _businessService.GetLatestAsync(
+            Math.Clamp(count, 1, 12),
+            cancellationToken);
+
+        return Ok(businesses);
+    }
+
     [HttpGet("{slug}")]
     public async Task<ActionResult<BusinessDetailDto>> GetBySlug(
         string slug,

@@ -8,6 +8,11 @@ public interface IBusinessService
         BusinessSearchRequest request,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Yayındaki en son eklenen firmalar, yeniden eskiye.</summary>
+    Task<IReadOnlyList<BusinessListItemDto>> GetLatestAsync(
+        int count,
+        CancellationToken cancellationToken = default);
+
     Task<BusinessDetailDto?> GetBySlugAsync(
         string slug,
         CancellationToken cancellationToken = default);

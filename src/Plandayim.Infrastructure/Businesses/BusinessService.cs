@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Plandayim.Application.Businesses;
 using Plandayim.Domain.Businesses;
 using Plandayim.Infrastructure.Persistence;
@@ -193,11 +193,32 @@ public sealed class BusinessService : IBusinessService
                     x.DistrictId == request.DistrictId.Value));
         }
 
+        return await ToListItems(query
+                .OrderByDescending(x => x.IsVerified)
+                .ThenBy(x => x.Name))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<BusinessListItemDto>> GetLatestAsync(
+        int count,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Businesses
+            .AsNoTracking()
+            .Where(x => x.IsActive)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .ThenByDescending(x => x.Id)
+            .Take(count);
+
+        return await ToListItems(query).ToListAsync(cancellationToken);
+    }
+
+    // Arama ve son eklenenler listesi aynı kart bilgisini kullanır.
+    private IQueryable<BusinessListItemDto> ToListItems(IQueryable<Business> query)
+    {
         var now = DateTime.UtcNow;
 
-        return await query
-            .OrderByDescending(x => x.IsVerified)
-            .ThenBy(x => x.Name)
+        return query
             .Select(x => new BusinessListItemDto(
                 x.Id,
                 x.Name,
@@ -247,7 +268,6 @@ public sealed class BusinessService : IBusinessService
                      campaign.StartsAtUtc <= now) &&
                     (!campaign.EndsAtUtc.HasValue ||
                      campaign.EndsAtUtc >= now))
-            ))
-            .ToListAsync(cancellationToken);
+            ));
     }
 }

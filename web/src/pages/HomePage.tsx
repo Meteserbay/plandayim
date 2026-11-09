@@ -4,7 +4,11 @@ import { Link } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import { getCategories } from "../api/categories";
 import { getCities, getDistricts } from "../api/locations";
-import { searchBusinesses } from "../api/businesses";
+import {
+    getLatestBusinesses,
+    searchBusinesses,
+} from "../api/businesses";
+import BusinessCard from "../components/BusinessCard";
 import { usePageMeta } from "../seo";
 
 import type { Category } from "../types/category";
@@ -17,6 +21,8 @@ function HomePage() {
     const [cities, setCities] = useState<City[]>([]);
     const [districts, setDistricts] = useState<District[]>([]);
     const [businesses, setBusinesses] = useState<BusinessListItem[]>([]);
+    const [latestBusinesses, setLatestBusinesses] =
+        useState<BusinessListItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedCategoryId, setSelectedCategoryId] = useState("");
     const [selectedCityId, setSelectedCityId] = useState("");
@@ -31,6 +37,10 @@ function HomePage() {
 
         getCities()
             .then(setCities)
+            .catch(console.error);
+
+        getLatestBusinesses()
+            .then(setLatestBusinesses)
             .catch(console.error);
     }, []);
 
@@ -187,58 +197,34 @@ function HomePage() {
                 ) : (
                     <div className="business-grid">
                         {businesses.map((business) => (
-                            <article
-                                className="business-card"
+                            <BusinessCard
                                 key={business.id}
-                            >
-                                {business.coverImageUrl && (
-                                    <img
-                                        className="business-card-image"
-                                        src={business.coverImageUrl}
-                                        alt={business.name}
-                                    />
-                                )}
-
-                                <div className="business-card-body">
-                                    <div className="business-card-header">
-                                        <h3>{business.name}</h3>
-
-                                        {business.isVerified && (
-                                            <span className="verified-mini">
-                                                ✓
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {business.primaryCategory && (
-                                        <p className="business-category">
-                                            {business.primaryCategory}
-                                        </p>
-                                    )}
-
-                                    <p className="business-meta">
-                                        {business.cityName} / {business.districtName}
-                                    </p>
-
-                                    {business.hasActiveCampaign && (
-                                        <div className="campaign-badge">
-                                            Plandayım avantajı var
-                                        </div>
-                                    )}
-
-                                    <Link
-                                        className="details-link"
-                                        to={`/business/${business.slug}`}
-                                    >
-                                        Detayları Gör
-                                    </Link>
-                                </div>
-                            </article>
+                                business={business}
+                            />
                         ))}
                     </div>
                 )}
             </main>
             )}
+            {latestBusinesses.length > 0 && (
+                <section className="latest-section">
+                    <div className="latest-container">
+                        <span className="section-eyebrow">YENİ</span>
+                        <h2>Yeni eklenen firmalar</h2>
+                        <p>Plandayım'a son katılan işletmeleri keşfet.</p>
+
+                        <div className="business-grid">
+                            {latestBusinesses.map((business) => (
+                                <BusinessCard
+                                    key={business.id}
+                                    business={business}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
             <section className="popular-section">
                 <div className="popular-container">
                     <div className="popular-heading">

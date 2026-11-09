@@ -131,6 +131,16 @@ function AccountAuthPage({ mode }: AccountAuthPageProps) {
                     </p>
                 )}
 
+                {isRegister && (
+                    <p className="legal-notice">
+                        Hesap oluşturarak{" "}
+                        <Link to="/kullanim-kosullari">Kullanım Koşulları</Link>
+                        'nı kabul etmiş olursun. Kişisel verilerin{" "}
+                        <Link to="/kvkk">KVKK Aydınlatma Metni</Link>
+                        {" "}kapsamında işlenir.
+                    </p>
+                )}
+
                 <button
                     className="search-button"
                     type="submit"

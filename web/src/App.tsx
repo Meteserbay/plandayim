@@ -9,6 +9,9 @@ import AdminBusinessEditPage from "./pages/AdminBusinessEditPage";
 import AccountAuthPage from "./pages/AccountAuthPage";
 import OwnerPanelPage from "./pages/OwnerPanelPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import KvkkPage from "./legal/KvkkPage";
+import PrivacyPage from "./legal/PrivacyPage";
+import TermsPage from "./legal/TermsPage";
 
 function App() {
     return (
@@ -38,6 +41,9 @@ function App() {
                 element={<AccountAuthPage key="register" mode="register" />}
             />
             <Route path="/panel" element={<OwnerPanelPage />} />
+            <Route path="/kvkk" element={<KvkkPage />} />
+            <Route path="/gizlilik" element={<PrivacyPage />} />
+            <Route path="/kullanim-kosullari" element={<TermsPage />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>
     );

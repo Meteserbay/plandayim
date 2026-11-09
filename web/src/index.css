@@ -1283,6 +1283,17 @@ button {
     object-fit: cover;
 }
 
+.business-card-placeholder {
+    height: 190px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #eef2ff, #f8fafc);
+    color: #a5b4fc;
+    font-size: 64px;
+    font-weight: 800;
+}
+
 .business-card-body {
     padding: 18px;
 }
@@ -1752,3 +1763,123 @@ button {
     color: white;
     font-weight: 800;
 }
+
+/* Yeni eklenen firmalar */
+
+.latest-section {
+    padding: 56px 24px 8px;
+    background: #f8fafc;
+}
+
+.latest-container {
+    max-width: 1080px;
+    margin: 0 auto;
+}
+
+.latest-container h2 {
+    margin: 0;
+    color: #111827;
+    font-size: 30px;
+    letter-spacing: -0.8px;
+}
+
+.latest-container > p {
+    margin: 10px 0 26px;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+/* Yasal metinler */
+
+.legal-page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+    color: #334155;
+    line-height: 1.7;
+}
+
+.legal-page h1 {
+    margin: 0 0 6px;
+    color: #111827;
+    font-size: 32px;
+    letter-spacing: -0.8px;
+    line-height: 1.2;
+}
+
+.legal-page h2 {
+    margin: 36px 0 10px;
+    color: #111827;
+    font-size: 20px;
+}
+
+.legal-page ul {
+    padding-left: 22px;
+}
+
+.legal-page li {
+    margin-bottom: 6px;
+}
+
+.legal-page a {
+    color: #4338ca;
+    font-weight: 600;
+}
+
+.legal-updated {
+    margin: 0 0 28px;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.legal-table-wrap {
+    overflow-x: auto;
+}
+
+.legal-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.legal-table th,
+.legal-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    vertical-align: top;
+}
+
+.legal-table th {
+    color: #111827;
+    background: #f8fafc;
+}
+
+.legal-table td:first-child {
+    width: 30%;
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.legal-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 14px;
+}
+
+.legal-notice {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+    .legal-notice a {
+        color: #4338ca;
+        font-weight: 600;
+    }

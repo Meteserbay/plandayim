@@ -244,6 +244,12 @@ function BusinessApplicationPage() {
                             </p>
                         )}
 
+                        <p className="legal-notice">
+                            Başvuruda verdiğin bilgiler{" "}
+                            <Link to="/kvkk">KVKK Aydınlatma Metni</Link>
+                            {" "}kapsamında işlenir.
+                        </p>
+
                         <button
                             className="search-button"
                             type="submit"

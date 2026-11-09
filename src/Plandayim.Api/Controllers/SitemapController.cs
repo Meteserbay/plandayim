@@ -15,7 +15,8 @@ public sealed class SitemapController : ControllerBase
     private static readonly XNamespace Ns =
         "http://www.sitemaps.org/schemas/sitemap/0.9";
 
-    private static readonly string[] StaticPaths = ["/", "/firmalar-icin"];
+    private static readonly string[] StaticPaths =
+        ["/", "/firmalar-icin", "/kvkk", "/gizlilik", "/kullanim-kosullari"];
 
     private readonly PlandayimDbContext _dbContext;
 

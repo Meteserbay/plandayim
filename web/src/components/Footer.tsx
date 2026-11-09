@@ -28,6 +28,13 @@ function Footer() {
                         <Link to="/hesap/giris">Firma Girişi</Link>
                         <Link to="/hesap/kayit">Hesap Oluştur</Link>
                     </div>
+
+                    <div>
+                        <strong>Yasal</strong>
+                        <Link to="/kvkk">KVKK Aydınlatma Metni</Link>
+                        <Link to="/gizlilik">Gizlilik ve Çerezler</Link>
+                        <Link to="/kullanim-kosullari">Kullanım Koşulları</Link>
+                    </div>
                 </div>
             </div>
 

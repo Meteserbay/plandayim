@@ -55,6 +55,20 @@ export async function searchBusinesses(filters: {
     return response.json();
 }
 
+export async function getLatestBusinesses(
+    count = 6
+): Promise<BusinessListItem[]> {
+    const response = await fetch(
+        `${API_BASE_URL}/api/businesses/latest?count=${count}`
+    );
+
+    if (!response.ok) {
+        throw new Error("Yeni firmalar alınamadı.");
+    }
+
+    return response.json();
+}
+
 export async function getBusinessBySlug(
     slug: string
 ): Promise<BusinessDetail> {
