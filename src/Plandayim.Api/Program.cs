@@ -222,7 +222,10 @@ app.UseStaticFiles(new StaticFileOptions
 // aynı adresten servis edilir; böylece site ve API tek alan adında çalışır.
 // HTTPS yönlendirmesini Cloudflare yaptığı için burada yapılmaz.
 app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = context => SetSiteCacheHeaders(context.Context.Response)
+});
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -241,7 +244,27 @@ app.Map("/api/{**rest}", () => Results.Problem(
 // /panel, /business/... gibi sayfa adresleri React uygulamasına yönlenir.
 if (File.Exists(Path.Combine(app.Environment.WebRootPath ?? "", "index.html")))
 {
-    app.MapFallbackToFile("index.html");
+    app.MapFallbackToFile("index.html", new StaticFileOptions
+    {
+        OnPrepareResponse = context => SetSiteCacheHeaders(context.Context.Response)
+    });
 }
 
 app.Run();
+
+// index.html her seferinde sunucuya sorulur; böylece güncelleme yapılınca
+// ziyaretçiler eski sayfayı görmez. assets/ altındaki dosyaların adı içerikle
+// değiştiği için uzun süre önbelleklenebilir.
+static void SetSiteCacheHeaders(HttpResponse response)
+{
+    var contentType = response.ContentType ?? "";
+
+    if (contentType.StartsWith("text/html", StringComparison.OrdinalIgnoreCase))
+    {
+        response.Headers.CacheControl = "no-cache";
+    }
+    else if (response.HttpContext.Request.Path.StartsWithSegments("/assets"))
+    {
+        response.Headers.CacheControl = "public,max-age=31536000,immutable";
+    }
+}
