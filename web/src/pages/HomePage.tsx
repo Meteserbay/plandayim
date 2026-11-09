@@ -206,25 +206,6 @@ function HomePage() {
                 )}
             </main>
             )}
-            {latestBusinesses.length > 0 && (
-                <section className="latest-section">
-                    <div className="latest-container">
-                        <span className="section-eyebrow">YENİ</span>
-                        <h2>Yeni eklenen firmalar</h2>
-                        <p>Plandayım'a son katılan işletmeleri keşfet.</p>
-
-                        <div className="business-grid">
-                            {latestBusinesses.map((business) => (
-                                <BusinessCard
-                                    key={business.id}
-                                    business={business}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                </section>
-            )}
-
             <section className="popular-section">
                 <div className="popular-container">
                     <div className="popular-heading">
@@ -272,6 +253,25 @@ function HomePage() {
                     </div>
                 </div>
             </section>
+            {latestBusinesses.length > 0 && (
+                <section className="latest-section">
+                    <div className="latest-container">
+                        <span className="section-eyebrow">YENİ</span>
+                        <h2>Yeni eklenen firmalar</h2>
+                        <p>Plandayım'a son katılan işletmeleri keşfet.</p>
+
+                        <div className="business-grid">
+                            {latestBusinesses.map((business) => (
+                                <BusinessCard
+                                    key={business.id}
+                                    business={business}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
             <section id="how-it-works" className="info-section">
                 <div className="info-container">
                     <div className="section-heading">
